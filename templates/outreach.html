@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Outreach - Job Scraper</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="header">
+        <div style="display:flex;align-items:center;gap:24px;">
+            <h1>Job Scraper</h1>
+            <nav class="nav-tabs">
+                <a href="/" class="nav-tab">Jobs</a>
+                <a href="/outreach" class="nav-tab active">Outreach</a>
+            </nav>
+        </div>
+        <div class="header-actions">
+            <span id="hunter-status" style="font-size:12px;color:var(--text-muted);"></span>
+            <span id="email-status" style="font-size:12px;color:var(--text-muted);"></span>
+            <button class="btn btn-outline" id="btn-preview" onclick="previewEmail()">Preview Email</button>
+            <button class="btn btn-yellow" id="btn-send" onclick="sendEmailNow()">Send Email Now</button>
+            <button class="btn btn-primary" id="btn-generate" onclick="generateOutreach()">Find Contacts for Top Jobs</button>
+        </div>
+    </div>
+
+    <div class="stats-bar" id="stats-bar"></div>
+
+    <div class="filters">
+        <div class="filter-group">
+            <label>Status</label>
+            <select id="filter-status" onchange="loadOutreach()">
+                <option value="">All</option>
+                <option value="pending" selected>Pending (Ready to Send)</option>
+                <option value="messaged">Messaged</option>
+                <option value="replied">Replied</option>
+                <option value="followed_up">Followed Up</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Search</label>
+            <input type="text" id="filter-search" placeholder="Company, role, contact...">
+        </div>
+    </div>
+
+    <div class="content">
+        <div id="outreach-list"></div>
+    </div>
+
+    <script src="/static/outreach.js"></script>
+</body>
+</html>

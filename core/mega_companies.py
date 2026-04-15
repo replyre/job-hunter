@@ -1,0 +1,280 @@
+"""Massive curated company list — Indian tech + MNCs with India offices + Global remote-friendly.
+Every company here has an engineering/software team and has been around 5+ years.
+Organized by category for easy management."""
+
+
+# ── Indian Tech Giants & Unicorns ──────────────────────────────
+
+INDIAN_TECH = [
+    # IT Services (Big 4 + others)
+    {"name": "TCS", "domain": "tcs.com", "tags": "it-services,india-hq", "employee_count": "600000+", "founded_year": 1968},
+    {"name": "Infosys", "domain": "infosys.com", "tags": "it-services,india-hq", "employee_count": "300000+", "founded_year": 1981},
+    {"name": "Wipro", "domain": "wipro.com", "tags": "it-services,india-hq", "employee_count": "250000+", "founded_year": 1945},
+    {"name": "HCLTech", "domain": "hcltech.com", "tags": "it-services,india-hq", "employee_count": "220000+", "founded_year": 1976},
+    {"name": "Tech Mahindra", "domain": "techmahindra.com", "tags": "it-services,india-hq", "employee_count": "150000+", "founded_year": 1986},
+    {"name": "LTIMindtree", "domain": "ltimindtree.com", "tags": "it-services,india-hq", "employee_count": "80000+", "founded_year": 1997},
+    {"name": "Mphasis", "domain": "mphasis.com", "tags": "it-services,india-hq", "employee_count": "30000+", "founded_year": 2000},
+    {"name": "Persistent Systems", "domain": "persistent.com", "tags": "it-services,india-hq", "employee_count": "20000+", "founded_year": 1990},
+    {"name": "Coforge", "domain": "coforge.com", "tags": "it-services,india-hq", "employee_count": "25000+", "founded_year": 1992},
+    {"name": "Zensar Technologies", "domain": "zensar.com", "tags": "it-services,india-hq", "employee_count": "10000+", "founded_year": 1991},
+    {"name": "Hexaware", "domain": "hexaware.com", "tags": "it-services,india-hq", "employee_count": "25000+", "founded_year": 1990},
+    {"name": "Birlasoft", "domain": "birlasoft.com", "tags": "it-services,india-hq", "employee_count": "12000+", "founded_year": 1990},
+    {"name": "Cyient", "domain": "cyient.com", "tags": "it-services,india-hq", "employee_count": "15000+", "founded_year": 1991},
+    {"name": "KPIT Technologies", "domain": "kpit.com", "tags": "it-services,automotive,india-hq", "employee_count": "10000+", "founded_year": 1990},
+    {"name": "Happiest Minds", "domain": "happiestminds.com", "tags": "it-services,india-hq", "employee_count": "5000+", "founded_year": 2011},
+
+    # Indian SaaS / Product Companies
+    {"name": "Zoho", "domain": "zoho.com", "tags": "saas,suite,india-hq", "employee_count": "15000+", "founded_year": 1996},
+    {"name": "Freshworks", "domain": "freshworks.com", "tags": "saas,crm,india-hq", "employee_count": "5000+", "founded_year": 2010},
+    {"name": "Postman", "domain": "postman.com", "tags": "api,devtools,india-hq", "employee_count": "1000+", "founded_year": 2014},
+    {"name": "Razorpay", "domain": "razorpay.com", "tags": "fintech,payments,india-hq", "employee_count": "3000+", "founded_year": 2014},
+    {"name": "Chargebee", "domain": "chargebee.com", "tags": "saas,billing,india-hq", "employee_count": "1000+", "founded_year": 2011},
+    {"name": "BrowserStack", "domain": "browserstack.com", "tags": "devtools,testing,india-hq", "employee_count": "2000+", "founded_year": 2011},
+    {"name": "Hasura", "domain": "hasura.io", "tags": "graphql,database,india-hq", "employee_count": "200+", "founded_year": 2017},
+    {"name": "Druva", "domain": "druva.com", "tags": "cloud,data-protection,india-hq", "employee_count": "1500+", "founded_year": 2008},
+    {"name": "Icertis", "domain": "icertis.com", "tags": "saas,contract-mgmt,india-hq", "employee_count": "2000+", "founded_year": 2009},
+    {"name": "CleverTap", "domain": "clevertap.com", "tags": "saas,marketing,india-hq", "employee_count": "700+", "founded_year": 2013},
+    {"name": "WebEngage", "domain": "webengage.com", "tags": "saas,marketing,india-hq", "employee_count": "500+", "founded_year": 2011},
+    {"name": "Leadsquared", "domain": "leadsquared.com", "tags": "saas,crm,india-hq", "employee_count": "1500+", "founded_year": 2012},
+    {"name": "Wingify", "domain": "wingify.com", "tags": "saas,ab-testing,india-hq", "employee_count": "300+", "founded_year": 2009},
+    {"name": "MoEngage", "domain": "moengage.com", "tags": "saas,marketing,india-hq", "employee_count": "800+", "founded_year": 2014},
+    {"name": "Hevo Data", "domain": "hevodata.com", "tags": "data,etl,india-hq", "employee_count": "300+", "founded_year": 2017},
+    {"name": "Unacademy", "domain": "unacademy.com", "tags": "edtech,india-hq", "employee_count": "3000+", "founded_year": 2015},
+    {"name": "Sigmoid", "domain": "sigmoid.com", "tags": "data,analytics,india-hq", "employee_count": "1000+", "founded_year": 2013},
+    {"name": "Yellow.ai", "domain": "yellow.ai", "tags": "ai,chatbot,india-hq", "employee_count": "1000+", "founded_year": 2016},
+    {"name": "Darwinbox", "domain": "darwinbox.com", "tags": "saas,hr,india-hq", "employee_count": "1000+", "founded_year": 2015},
+
+    # Indian Fintech
+    {"name": "PhonePe", "domain": "phonepe.com", "tags": "fintech,payments,india-hq", "employee_count": "5000+", "founded_year": 2015},
+    {"name": "Paytm", "domain": "paytm.com", "tags": "fintech,payments,india-hq", "employee_count": "10000+", "founded_year": 2010},
+    {"name": "CRED", "domain": "cred.club", "tags": "fintech,india-hq", "employee_count": "1000+", "founded_year": 2018},
+    {"name": "Groww", "domain": "groww.in", "tags": "fintech,investing,india-hq", "employee_count": "1000+", "founded_year": 2016},
+    {"name": "Zerodha", "domain": "zerodha.com", "tags": "fintech,trading,india-hq", "employee_count": "1500+", "founded_year": 2010},
+    {"name": "Upstox", "domain": "upstox.com", "tags": "fintech,trading,india-hq", "employee_count": "1000+", "founded_year": 2009},
+    {"name": "PolicyBazaar", "domain": "policybazaar.com", "tags": "fintech,insurance,india-hq", "employee_count": "5000+", "founded_year": 2008},
+    {"name": "BharatPe", "domain": "bharatpe.com", "tags": "fintech,payments,india-hq", "employee_count": "1500+", "founded_year": 2018},
+    {"name": "Slice", "domain": "sliceit.com", "tags": "fintech,cards,india-hq", "employee_count": "1000+", "founded_year": 2016},
+    {"name": "Jupiter", "domain": "jupiter.money", "tags": "fintech,neobank,india-hq", "employee_count": "500+", "founded_year": 2019},
+    {"name": "INDmoney", "domain": "indmoney.com", "tags": "fintech,wealth,india-hq", "employee_count": "500+", "founded_year": 2019},
+    {"name": "Niyo", "domain": "goniyo.com", "tags": "fintech,neobank,india-hq", "employee_count": "500+", "founded_year": 2015},
+    {"name": "Juspay", "domain": "juspay.in", "tags": "fintech,payments,india-hq", "employee_count": "800+", "founded_year": 2012},
+    {"name": "Pine Labs", "domain": "pinelabs.com", "tags": "fintech,payments,india-hq", "employee_count": "2000+", "founded_year": 1998},
+    {"name": "Cashfree", "domain": "cashfree.com", "tags": "fintech,payments,india-hq", "employee_count": "500+", "founded_year": 2015},
+
+    # Indian E-commerce / Marketplace
+    {"name": "Flipkart", "domain": "flipkart.com", "tags": "ecommerce,india-hq", "employee_count": "30000+", "founded_year": 2007},
+    {"name": "Myntra", "domain": "myntra.com", "tags": "ecommerce,fashion,india-hq", "employee_count": "5000+", "founded_year": 2007},
+    {"name": "Meesho", "domain": "meesho.com", "tags": "ecommerce,social-commerce,india-hq", "employee_count": "2000+", "founded_year": 2015},
+    {"name": "Nykaa", "domain": "nykaa.com", "tags": "ecommerce,beauty,india-hq", "employee_count": "3000+", "founded_year": 2012},
+    {"name": "BigBasket", "domain": "bigbasket.com", "tags": "ecommerce,grocery,india-hq", "employee_count": "5000+", "founded_year": 2011},
+    {"name": "Swiggy", "domain": "swiggy.com", "tags": "delivery,food,india-hq", "employee_count": "5000+", "founded_year": 2014},
+    {"name": "Zomato", "domain": "zomato.com", "tags": "delivery,food,india-hq", "employee_count": "5000+", "founded_year": 2008},
+    {"name": "Dunzo", "domain": "dunzo.com", "tags": "delivery,hyperlocal,india-hq", "employee_count": "1000+", "founded_year": 2015},
+    {"name": "Blinkit", "domain": "blinkit.com", "tags": "delivery,grocery,india-hq", "employee_count": "2000+", "founded_year": 2013},
+    {"name": "Urban Company", "domain": "urbancompany.com", "tags": "marketplace,services,india-hq", "employee_count": "2000+", "founded_year": 2014},
+    {"name": "CarDekho", "domain": "cardekho.com", "tags": "marketplace,auto,india-hq", "employee_count": "3000+", "founded_year": 2008},
+    {"name": "Cars24", "domain": "cars24.com", "tags": "marketplace,auto,india-hq", "employee_count": "5000+", "founded_year": 2015},
+    {"name": "OLX India", "domain": "olx.in", "tags": "marketplace,classifieds,india-hq", "employee_count": "1000+", "founded_year": 2006},
+    {"name": "Practo", "domain": "practo.com", "tags": "healthtech,marketplace,india-hq", "employee_count": "1000+", "founded_year": 2008},
+    {"name": "1mg", "domain": "1mg.com", "tags": "healthtech,pharmacy,india-hq", "employee_count": "2000+", "founded_year": 2013},
+    {"name": "Lenskart", "domain": "lenskart.com", "tags": "ecommerce,eyewear,india-hq", "employee_count": "5000+", "founded_year": 2010},
+    {"name": "Purplle", "domain": "purplle.com", "tags": "ecommerce,beauty,india-hq", "employee_count": "1000+", "founded_year": 2012},
+
+    # Indian Travel / Mobility
+    {"name": "Ola", "domain": "olacabs.com", "tags": "mobility,ride-hailing,india-hq", "employee_count": "5000+", "founded_year": 2010},
+    {"name": "MakeMyTrip", "domain": "makemytrip.com", "tags": "travel,india-hq", "employee_count": "3000+", "founded_year": 2000},
+    {"name": "Goibibo", "domain": "goibibo.com", "tags": "travel,india-hq", "employee_count": "1000+", "founded_year": 2009},
+    {"name": "Rapido", "domain": "rapido.bike", "tags": "mobility,bike-taxi,india-hq", "employee_count": "1000+", "founded_year": 2015},
+    {"name": "Cleartrip", "domain": "cleartrip.com", "tags": "travel,india-hq", "employee_count": "500+", "founded_year": 2006},
+    {"name": "ixigo", "domain": "ixigo.com", "tags": "travel,india-hq", "employee_count": "500+", "founded_year": 2007},
+    {"name": "RedBus", "domain": "redbus.in", "tags": "travel,bus,india-hq", "employee_count": "500+", "founded_year": 2006},
+
+    # Indian Edtech
+    {"name": "BYJU'S", "domain": "byjus.com", "tags": "edtech,india-hq", "employee_count": "10000+", "founded_year": 2011},
+    {"name": "Vedantu", "domain": "vedantu.com", "tags": "edtech,india-hq", "employee_count": "2000+", "founded_year": 2011},
+    {"name": "upGrad", "domain": "upgrad.com", "tags": "edtech,india-hq", "employee_count": "3000+", "founded_year": 2015},
+    {"name": "Scaler Academy", "domain": "scaler.com", "tags": "edtech,india-hq", "employee_count": "1000+", "founded_year": 2019},
+    {"name": "Physics Wallah", "domain": "pw.live", "tags": "edtech,india-hq", "employee_count": "3000+", "founded_year": 2014},
+    {"name": "Eruditus", "domain": "eruditus.com", "tags": "edtech,india-hq", "employee_count": "2000+", "founded_year": 2010},
+    {"name": "Great Learning", "domain": "greatlearning.in", "tags": "edtech,india-hq", "employee_count": "2000+", "founded_year": 2013},
+    {"name": "Simplilearn", "domain": "simplilearn.com", "tags": "edtech,india-hq", "employee_count": "2000+", "founded_year": 2010},
+
+    # Indian Conglomerates (tech arms)
+    {"name": "Jio Platforms", "domain": "jio.com", "tags": "telecom,digital,india-hq", "employee_count": "50000+", "founded_year": 2016},
+    {"name": "Tata Digital", "domain": "tatadigital.com", "tags": "digital,ecommerce,india-hq", "employee_count": "5000+", "founded_year": 2019},
+    {"name": "Tata Elxsi", "domain": "tataelxsi.com", "tags": "design,engineering,india-hq", "employee_count": "10000+", "founded_year": 1989},
+    {"name": "Tata Communications", "domain": "tatacommunications.com", "tags": "telecom,cloud,india-hq", "employee_count": "12000+", "founded_year": 1986},
+    {"name": "Infosys BPM", "domain": "infosysbpm.com", "tags": "bpm,it-services,india-hq", "employee_count": "60000+", "founded_year": 2002},
+    {"name": "Mahindra Comviva", "domain": "comviva.com", "tags": "telecom,fintech,india-hq", "employee_count": "2000+", "founded_year": 1999},
+    {"name": "Reliance Digital", "domain": "reliancedigital.in", "tags": "retail,digital,india-hq", "employee_count": "5000+", "founded_year": 2006},
+    {"name": "Airtel X Labs", "domain": "airtel.in", "tags": "telecom,digital,india-hq", "employee_count": "5000+", "founded_year": 1995},
+
+    # Indian Enterprise / B2B
+    {"name": "Tekion", "domain": "tekion.com", "tags": "saas,automotive,india-hq", "employee_count": "2000+", "founded_year": 2016},
+    {"name": "Mindtickle", "domain": "mindtickle.com", "tags": "saas,sales-enablement,india-hq", "employee_count": "700+", "founded_year": 2011},
+    {"name": "Whatfix", "domain": "whatfix.com", "tags": "saas,digital-adoption,india-hq", "employee_count": "800+", "founded_year": 2014},
+    {"name": "Capillary Technologies", "domain": "capillarytech.com", "tags": "saas,retail,india-hq", "employee_count": "500+", "founded_year": 2008},
+    {"name": "Innovaccer", "domain": "innovaccer.com", "tags": "healthtech,data,india-hq", "employee_count": "1000+", "founded_year": 2014},
+    {"name": "Zetwerk", "domain": "zetwerk.com", "tags": "manufacturing,b2b,india-hq", "employee_count": "2000+", "founded_year": 2018},
+    {"name": "OfBusiness", "domain": "ofbusiness.com", "tags": "b2b,commerce,india-hq", "employee_count": "1000+", "founded_year": 2016},
+    {"name": "Khatabook", "domain": "khatabook.com", "tags": "fintech,smb,india-hq", "employee_count": "500+", "founded_year": 2019},
+    {"name": "Vyapar", "domain": "vyaparapp.in", "tags": "fintech,accounting,india-hq", "employee_count": "500+", "founded_year": 2017},
+]
+
+# ── MNCs with Large India Engineering Centers ──────────────────
+
+MNCS_INDIA = [
+    {"name": "Google India", "domain": "google.com", "tags": "big-tech,india-office", "employee_count": "10000+", "founded_year": 1998},
+    {"name": "Microsoft India", "domain": "microsoft.com", "tags": "big-tech,india-office", "employee_count": "20000+", "founded_year": 1975},
+    {"name": "Amazon India", "domain": "amazon.in", "tags": "big-tech,ecommerce,india-office", "employee_count": "100000+", "founded_year": 1994},
+    {"name": "Meta India", "domain": "meta.com", "tags": "big-tech,social,india-office", "employee_count": "5000+", "founded_year": 2004},
+    {"name": "Apple India", "domain": "apple.com", "tags": "big-tech,india-office", "employee_count": "5000+", "founded_year": 1976},
+    {"name": "Netflix India", "domain": "netflix.com", "tags": "streaming,india-office", "employee_count": "1000+", "founded_year": 1997},
+    {"name": "Uber India", "domain": "uber.com", "tags": "mobility,india-office", "employee_count": "5000+", "founded_year": 2009},
+    {"name": "Salesforce India", "domain": "salesforce.com", "tags": "saas,crm,india-office", "employee_count": "8000+", "founded_year": 1999},
+    {"name": "Adobe India", "domain": "adobe.com", "tags": "creative,saas,india-office", "employee_count": "6000+", "founded_year": 1982},
+    {"name": "Oracle India", "domain": "oracle.com", "tags": "enterprise,database,india-office", "employee_count": "40000+", "founded_year": 1977},
+    {"name": "SAP India", "domain": "sap.com", "tags": "enterprise,erp,india-office", "employee_count": "15000+", "founded_year": 1972},
+    {"name": "IBM India", "domain": "ibm.com", "tags": "enterprise,cloud,india-office", "employee_count": "100000+", "founded_year": 1911},
+    {"name": "Cisco India", "domain": "cisco.com", "tags": "networking,india-office", "employee_count": "12000+", "founded_year": 1984},
+    {"name": "Intel India", "domain": "intel.com", "tags": "semiconductor,india-office", "employee_count": "10000+", "founded_year": 1968},
+    {"name": "Qualcomm India", "domain": "qualcomm.com", "tags": "semiconductor,india-office", "employee_count": "8000+", "founded_year": 1985},
+    {"name": "Samsung India", "domain": "samsung.com", "tags": "electronics,india-office", "employee_count": "5000+", "founded_year": 1938},
+    {"name": "Goldman Sachs India", "domain": "goldmansachs.com", "tags": "finance,india-office", "employee_count": "10000+", "founded_year": 1869},
+    {"name": "JP Morgan India", "domain": "jpmorgan.com", "tags": "finance,india-office", "employee_count": "50000+", "founded_year": 1799},
+    {"name": "Morgan Stanley India", "domain": "morganstanley.com", "tags": "finance,india-office", "employee_count": "10000+", "founded_year": 1935},
+    {"name": "Deutsche Bank India", "domain": "db.com", "tags": "finance,india-office", "employee_count": "12000+", "founded_year": 1870},
+    {"name": "Barclays India", "domain": "barclays.com", "tags": "finance,india-office", "employee_count": "8000+", "founded_year": 1690},
+    {"name": "Visa India", "domain": "visa.com", "tags": "fintech,payments,india-office", "employee_count": "4000+", "founded_year": 1958},
+    {"name": "Mastercard India", "domain": "mastercard.com", "tags": "fintech,payments,india-office", "employee_count": "3000+", "founded_year": 1966},
+    {"name": "PayPal India", "domain": "paypal.com", "tags": "fintech,payments,india-office", "employee_count": "4000+", "founded_year": 1998},
+    {"name": "Stripe India", "domain": "stripe.com", "tags": "fintech,payments,india-office", "employee_count": "500+", "founded_year": 2010},
+    {"name": "VMware India", "domain": "vmware.com", "tags": "cloud,virtualization,india-office", "employee_count": "5000+", "founded_year": 1998},
+    {"name": "ServiceNow India", "domain": "servicenow.com", "tags": "saas,itsm,india-office", "employee_count": "3000+", "founded_year": 2004},
+    {"name": "Atlassian India", "domain": "atlassian.com", "tags": "saas,devtools,india-office", "employee_count": "2000+", "founded_year": 2002},
+    {"name": "Intuit India", "domain": "intuit.com", "tags": "saas,fintech,india-office", "employee_count": "3000+", "founded_year": 1983},
+    {"name": "LinkedIn India", "domain": "linkedin.com", "tags": "social,professional,india-office", "employee_count": "3000+", "founded_year": 2002},
+    {"name": "Twitter India", "domain": "x.com", "tags": "social,media,india-office", "employee_count": "500+", "founded_year": 2006},
+    {"name": "Spotify India", "domain": "spotify.com", "tags": "music,streaming,india-office", "employee_count": "1000+", "founded_year": 2006},
+    {"name": "Shopify India", "domain": "shopify.com", "tags": "ecommerce,saas,india-office", "employee_count": "500+", "founded_year": 2006},
+    {"name": "Twilio India", "domain": "twilio.com", "tags": "communications,api,india-office", "employee_count": "1000+", "founded_year": 2008},
+    {"name": "Confluent India", "domain": "confluent.io", "tags": "kafka,streaming,india-office", "employee_count": "500+", "founded_year": 2014},
+    {"name": "Elastic India", "domain": "elastic.co", "tags": "search,observability,india-office", "employee_count": "500+", "founded_year": 2012},
+    {"name": "MongoDB India", "domain": "mongodb.com", "tags": "database,nosql,india-office", "employee_count": "1000+", "founded_year": 2007},
+    {"name": "Grafana Labs India", "domain": "grafana.com", "tags": "monitoring,observability,india-office", "employee_count": "500+", "founded_year": 2014},
+    {"name": "DataDog India", "domain": "datadoghq.com", "tags": "monitoring,observability,india-office", "employee_count": "500+", "founded_year": 2010},
+    {"name": "CrowdStrike India", "domain": "crowdstrike.com", "tags": "cybersecurity,cloud,india-office", "employee_count": "1000+", "founded_year": 2011},
+    {"name": "Palo Alto Networks India", "domain": "paloaltonetworks.com", "tags": "cybersecurity,india-office", "employee_count": "3000+", "founded_year": 2005},
+    {"name": "Nutanix India", "domain": "nutanix.com", "tags": "cloud,infrastructure,india-office", "employee_count": "3000+", "founded_year": 2009},
+    {"name": "Cohesity India", "domain": "cohesity.com", "tags": "data,backup,india-office", "employee_count": "500+", "founded_year": 2013},
+    {"name": "ThoughtSpot India", "domain": "thoughtspot.com", "tags": "analytics,bi,india-office", "employee_count": "500+", "founded_year": 2012},
+    {"name": "Sprinklr India", "domain": "sprinklr.com", "tags": "saas,social,india-office", "employee_count": "2000+", "founded_year": 2009},
+    {"name": "Couchbase India", "domain": "couchbase.com", "tags": "database,nosql,india-office", "employee_count": "500+", "founded_year": 2011},
+    {"name": "Commvault India", "domain": "commvault.com", "tags": "data,backup,india-office", "employee_count": "1000+", "founded_year": 1996},
+    {"name": "NetApp India", "domain": "netapp.com", "tags": "storage,cloud,india-office", "employee_count": "3000+", "founded_year": 1992},
+    {"name": "Akamai India", "domain": "akamai.com", "tags": "cdn,security,india-office", "employee_count": "1000+", "founded_year": 1998},
+    {"name": "Freshworks India", "domain": "freshworks.com", "tags": "saas,crm,india-office", "employee_count": "5000+", "founded_year": 2010},
+    {"name": "ThoughtWorks India", "domain": "thoughtworks.com", "tags": "consulting,engineering,india-office", "employee_count": "5000+", "founded_year": 1993},
+    {"name": "Accenture India", "domain": "accenture.com", "tags": "consulting,it-services,india-office", "employee_count": "300000+", "founded_year": 1989},
+    {"name": "Deloitte India", "domain": "deloitte.com", "tags": "consulting,india-office", "employee_count": "50000+", "founded_year": 1845},
+    {"name": "EY India", "domain": "ey.com", "tags": "consulting,india-office", "employee_count": "40000+", "founded_year": 1989},
+    {"name": "KPMG India", "domain": "kpmg.com", "tags": "consulting,india-office", "employee_count": "30000+", "founded_year": 1987},
+    {"name": "Capgemini India", "domain": "capgemini.com", "tags": "consulting,it-services,india-office", "employee_count": "150000+", "founded_year": 1967},
+    {"name": "Cognizant India", "domain": "cognizant.com", "tags": "it-services,india-office", "employee_count": "250000+", "founded_year": 1994},
+    {"name": "DXC Technology India", "domain": "dxc.com", "tags": "it-services,india-office", "employee_count": "20000+", "founded_year": 2017},
+]
+
+# ── Global Remote-Friendly Companies (hire from India) ─────────
+
+GLOBAL_REMOTE = [
+    {"name": "GitLab", "domain": "gitlab.com", "tags": "devops,open-source,remote-first", "employee_count": "2000+", "founded_year": 2014},
+    {"name": "Automattic", "domain": "automattic.com", "tags": "wordpress,open-source,remote-first", "employee_count": "2000+", "founded_year": 2005},
+    {"name": "Canonical", "domain": "canonical.com", "tags": "ubuntu,open-source,remote-first", "employee_count": "1000+", "founded_year": 2004},
+    {"name": "Zapier", "domain": "zapier.com", "tags": "automation,saas,remote-first", "employee_count": "800+", "founded_year": 2011},
+    {"name": "Buffer", "domain": "buffer.com", "tags": "social,saas,remote-first", "employee_count": "100+", "founded_year": 2010},
+    {"name": "Toggl", "domain": "toggl.com", "tags": "productivity,saas,remote-first", "employee_count": "200+", "founded_year": 2006},
+    {"name": "Doist", "domain": "doist.com", "tags": "productivity,saas,remote-first", "employee_count": "100+", "founded_year": 2007},
+    {"name": "Hotjar", "domain": "hotjar.com", "tags": "analytics,saas,remote-first", "employee_count": "500+", "founded_year": 2014},
+    {"name": "Deel", "domain": "deel.com", "tags": "hr,payroll,remote-first", "employee_count": "3000+", "founded_year": 2019},
+    {"name": "Remote.com", "domain": "remote.com", "tags": "hr,remote-first", "employee_count": "1000+", "founded_year": 2019},
+    {"name": "Toptal", "domain": "toptal.com", "tags": "marketplace,talent,remote-first", "employee_count": "1000+", "founded_year": 2010},
+    {"name": "Turing", "domain": "turing.com", "tags": "marketplace,talent,remote-first", "employee_count": "1000+", "founded_year": 2018},
+    {"name": "Andela", "domain": "andela.com", "tags": "marketplace,talent,remote-first", "employee_count": "500+", "founded_year": 2014},
+    {"name": "Mattermost", "domain": "mattermost.com", "tags": "chat,open-source,remote-first", "employee_count": "300+", "founded_year": 2016},
+    {"name": "Supabase", "domain": "supabase.com", "tags": "database,open-source,remote-first", "employee_count": "200+", "founded_year": 2020},
+    {"name": "Linear", "domain": "linear.app", "tags": "project-management,saas,remote-first", "employee_count": "100+", "founded_year": 2019},
+    {"name": "Cal.com", "domain": "cal.com", "tags": "scheduling,open-source,remote-first", "employee_count": "100+", "founded_year": 2021},
+    {"name": "Airbyte", "domain": "airbyte.com", "tags": "data,etl,open-source,remote-first", "employee_count": "200+", "founded_year": 2020},
+    {"name": "Grafana Labs", "domain": "grafana.com", "tags": "monitoring,open-source,remote-first", "employee_count": "1000+", "founded_year": 2014},
+    {"name": "Elastic", "domain": "elastic.co", "tags": "search,open-source,remote-first", "employee_count": "3000+", "founded_year": 2012},
+    {"name": "Wikimedia Foundation", "domain": "wikimedia.org", "tags": "non-profit,open-source,remote-first", "employee_count": "500+", "founded_year": 2003},
+    {"name": "Mozilla", "domain": "mozilla.org", "tags": "browser,open-source,remote-first", "employee_count": "1000+", "founded_year": 2003},
+    {"name": "Red Hat", "domain": "redhat.com", "tags": "linux,open-source,remote-first", "employee_count": "20000+", "founded_year": 1993},
+    {"name": "SUSE", "domain": "suse.com", "tags": "linux,open-source,remote-first", "employee_count": "2000+", "founded_year": 1992},
+    {"name": "DigitalOcean", "domain": "digitalocean.com", "tags": "cloud,remote-first", "employee_count": "1000+", "founded_year": 2011},
+    {"name": "Cloudflare", "domain": "cloudflare.com", "tags": "infrastructure,security,cdn", "employee_count": "3000+", "founded_year": 2009},
+    {"name": "Hashicorp", "domain": "hashicorp.com", "tags": "devops,infrastructure,open-source", "employee_count": "2000+", "founded_year": 2012},
+    {"name": "Kong", "domain": "konghq.com", "tags": "api-gateway,open-source", "employee_count": "500+", "founded_year": 2009},
+    {"name": "Snyk", "domain": "snyk.io", "tags": "security,devtools", "employee_count": "1000+", "founded_year": 2015},
+    {"name": "Docker", "domain": "docker.com", "tags": "containers,devtools", "employee_count": "500+", "founded_year": 2008},
+    {"name": "CircleCI", "domain": "circleci.com", "tags": "ci-cd,devops", "employee_count": "500+", "founded_year": 2011},
+    {"name": "PagerDuty", "domain": "pagerduty.com", "tags": "incident-mgmt,saas", "employee_count": "1000+", "founded_year": 2009},
+    {"name": "Datadog", "domain": "datadoghq.com", "tags": "monitoring,observability", "employee_count": "5000+", "founded_year": 2010},
+    {"name": "New Relic", "domain": "newrelic.com", "tags": "monitoring,observability", "employee_count": "2000+", "founded_year": 2008},
+    {"name": "Sentry", "domain": "sentry.io", "tags": "error-tracking,monitoring", "employee_count": "500+", "founded_year": 2012},
+    {"name": "LaunchDarkly", "domain": "launchdarkly.com", "tags": "feature-flags,devtools", "employee_count": "500+", "founded_year": 2014},
+    {"name": "Vercel", "domain": "vercel.com", "tags": "cloud,frontend,devtools", "employee_count": "500+", "founded_year": 2015},
+    {"name": "Netlify", "domain": "netlify.com", "tags": "cloud,jamstack", "employee_count": "300+", "founded_year": 2014},
+    {"name": "Render", "domain": "render.com", "tags": "cloud,paas", "employee_count": "200+", "founded_year": 2018},
+    {"name": "Fly.io", "domain": "fly.io", "tags": "cloud,edge", "employee_count": "100+", "founded_year": 2017},
+    {"name": "Temporal", "domain": "temporal.io", "tags": "workflow,orchestration", "employee_count": "200+", "founded_year": 2019},
+    {"name": "Cockroach Labs", "domain": "cockroachlabs.com", "tags": "database,distributed", "employee_count": "500+", "founded_year": 2015},
+    {"name": "PlanetScale", "domain": "planetscale.com", "tags": "database,mysql", "employee_count": "200+", "founded_year": 2018},
+    {"name": "Neon", "domain": "neon.tech", "tags": "database,postgres,serverless", "employee_count": "200+", "founded_year": 2021},
+    {"name": "Retool", "domain": "retool.com", "tags": "internal-tools,low-code", "employee_count": "500+", "founded_year": 2017},
+    {"name": "Webflow", "domain": "webflow.com", "tags": "no-code,web-design", "employee_count": "1000+", "founded_year": 2013},
+    {"name": "Figma", "domain": "figma.com", "tags": "design,saas", "employee_count": "1000+", "founded_year": 2012},
+    {"name": "Notion", "domain": "notion.so", "tags": "productivity,saas", "employee_count": "500+", "founded_year": 2016},
+    {"name": "Stripe", "domain": "stripe.com", "tags": "fintech,payments,api", "employee_count": "5000+", "founded_year": 2010},
+    {"name": "Plaid", "domain": "plaid.com", "tags": "fintech,api,banking", "employee_count": "1000+", "founded_year": 2013},
+    {"name": "Brex", "domain": "brex.com", "tags": "fintech,corporate-cards", "employee_count": "1000+", "founded_year": 2017},
+    {"name": "Ramp", "domain": "ramp.com", "tags": "fintech,expense", "employee_count": "500+", "founded_year": 2019},
+    {"name": "Coinbase", "domain": "coinbase.com", "tags": "crypto,exchange", "employee_count": "3000+", "founded_year": 2012},
+    {"name": "Ripple", "domain": "ripple.com", "tags": "crypto,payments", "employee_count": "500+", "founded_year": 2012},
+]
+
+
+def get_all_mega_companies() -> list[dict]:
+    """Return all companies with india_friendly and id set."""
+    from core.models import Company
+    result = []
+    seen = set()
+
+    for category, companies, default_india in [
+        ("indian-tech", INDIAN_TECH, "yes"),
+        ("mncs-india", MNCS_INDIA, "yes"),
+        ("global-remote", GLOBAL_REMOTE, "maybe"),
+    ]:
+        for c in companies:
+            company_id = Company.make_id(c["name"])
+            if company_id in seen:
+                continue
+            seen.add(company_id)
+
+            result.append({
+                "id": company_id,
+                "name": c["name"],
+                "domain": c.get("domain", ""),
+                "careers_url": "",
+                "ats_platform": "unknown",
+                "ats_slug": "",
+                "founded_year": c.get("founded_year", 0),
+                "employee_count": c.get("employee_count", ""),
+                "tags": c.get("tags", ""),
+                "india_friendly": c.get("india_friendly", default_india),
+                "last_crawled": "",
+                "crawl_status": "paused",  # paused until ATS detected
+                "notes": category,
+            })
+
+    return result

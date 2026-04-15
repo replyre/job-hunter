@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Scraper Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css?v=4">
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div style="display:flex;align-items:center;gap:24px;">
+            <h1>Job Scraper</h1>
+            <nav class="nav-tabs">
+                <a href="/" class="nav-tab active">Jobs</a>
+                <a href="/outreach" class="nav-tab">Outreach</a>
+            </nav>
+        </div>
+        <div class="header-actions">
+            <span id="jsearch-status" style="font-size:12px;color:var(--text-muted);">JSearch: loading...</span>
+            <button class="btn btn-outline" onclick="openQueriesModal()">Search Queries</button>
+            <button id="btn-export" class="btn btn-green" onclick="openExportModal()">Export to Sheets</button>
+            <button id="btn-collect" class="btn btn-primary" onclick="collectJobs()">Collect Jobs</button>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-bar" id="stats-bar">
+        <div class="stat-card">
+            <div class="label">Total Jobs</div>
+            <div class="value">-</div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters">
+        <div class="filter-group">
+            <label>Search</label>
+            <input type="text" id="filter-search" placeholder="Title, company...">
+        </div>
+        <div class="filter-group">
+            <label>Source</label>
+            <select id="filter-source" onchange="applyFilters()">
+                <option value="">All Sources</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Status</label>
+            <select id="filter-status" onchange="applyFilters()">
+                <option value="">All</option>
+                <option value="new">New</option>
+                <option value="reviewed">Reviewed</option>
+                <option value="applied">Applied</option>
+                <option value="stale">Stale</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Min Score</label>
+            <select id="filter-score" onchange="applyFilters()">
+                <option value="0">Any</option>
+                <option value="30">30+</option>
+                <option value="50">50+</option>
+                <option value="60">60+</option>
+                <option value="70">70+</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>India Remote</label>
+            <select id="filter-india" onchange="applyFilters()">
+                <option value="">All</option>
+                <option value="yes">India Friendly</option>
+                <option value="maybe">India + Maybe</option>
+                <option value="no">Not India</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Location</label>
+            <input type="text" id="filter-location" placeholder="e.g. Remote, USA" onchange="applyFilters()">
+        </div>
+        <div class="filter-group">
+            <label>Tech</label>
+            <input type="text" id="filter-tech" placeholder="e.g. python, django" onchange="applyFilters()">
+        </div>
+        <div class="filter-group" style="justify-content: flex-end;">
+            <label>&nbsp;</label>
+            <button class="btn btn-outline" onclick="resetFilters()">Reset</button>
+        </div>
+    </div>
+
+    <!-- Job List -->
+    <div class="content">
+        <div class="job-list" id="job-list">
+            <div class="empty-state">
+                <h3>No jobs yet</h3>
+                <p>Click "Collect Jobs" to fetch from all sources.</p>
+            </div>
+        </div>
+        <div class="pagination">
+            <button class="btn btn-outline btn-sm" onclick="prevPage()">Previous</button>
+            <button class="btn btn-outline btn-sm" onclick="nextPage()">Next</button>
+        </div>
+    </div>
+
+    <!-- Job Detail Modal -->
+    <div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+        <div class="modal" id="modal-content"></div>
+    </div>
+
+    <!-- Search Queries Modal -->
+    <div class="modal-overlay" id="queries-overlay" onclick="if(event.target===this)closeQueriesModal()">
+        <div class="modal" id="queries-modal" style="width:720px;">
+            <h2>JSearch Queries</h2>
+            <p style="color:var(--text-muted);margin:8px 0 16px;font-size:13px;">
+                These queries run every time you click "Collect Jobs". Each enabled query uses 1 JSearch credit.
+                Toggle to enable/disable.
+            </p>
+            <div id="queries-list"></div>
+            <div style="border-top:1px solid var(--border);padding-top:16px;margin-top:16px;">
+                <div style="font-size:13px;font-weight:600;margin-bottom:8px;">Add New Query</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
+                    <div class="filter-group" style="flex:2;min-width:200px;">
+                        <label>Query</label>
+                        <input type="text" id="new-query" placeholder="e.g. python backend senior">
+                    </div>
+                    <div class="filter-group">
+                        <label>Country</label>
+                        <select id="new-country">
+                            <option value="IN">IN</option>
+                            <option value="US">US</option>
+                            <option value="GB">GB</option>
+                            <option value="CA">CA</option>
+                            <option value="DE">DE</option>
+                            <option value="SG">SG</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Posted</label>
+                        <select id="new-date">
+                            <option value="today">Today</option>
+                            <option value="3days" selected>3 days</option>
+                            <option value="week">Week</option>
+                            <option value="month">Month</option>
+                            <option value="all">All</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label style="font-size:12px;">
+                            <input type="checkbox" id="new-remote" style="margin-right:4px;"> Remote only
+                        </label>
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="addQuery()">Add</button>
+                </div>
+            </div>
+            <div class="modal-actions" style="margin-top:16px;">
+                <button class="btn btn-outline" onclick="closeQueriesModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div class="modal-overlay" id="export-overlay" onclick="if(event.target===this)closeExportModal()">
+        <div class="modal" id="export-content" style="width:500px;">
+            <h2>Export to Google Sheets</h2>
+            <p style="color:var(--text-muted);margin:8px 0 16px;">Push filtered jobs to your Google Sheet for n8n workflows.</p>
+
+            <div style="display:flex;flex-direction:column;gap:12px;">
+                <div class="filter-group">
+                    <label>Sheet Tab Name</label>
+                    <input type="text" id="export-sheet-name" value="Jobs" style="width:100%;">
+                </div>
+                <div class="filter-group">
+                    <label>Min Score</label>
+                    <select id="export-score" style="width:100%;">
+                        <option value="0">All</option>
+                        <option value="30">30+</option>
+                        <option value="50" selected>50+</option>
+                        <option value="60">60+</option>
+                        <option value="70">70+</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>India Remote</label>
+                    <select id="export-india" style="width:100%;">
+                        <option value="">All</option>
+                        <option value="yes">India Friendly Only</option>
+                        <option value="maybe">India + Maybe</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Mode</label>
+                    <select id="export-mode" style="width:100%;">
+                        <option value="replace">Replace (clear sheet + rewrite)</option>
+                        <option value="append">Append (add new rows)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="modal-actions" style="margin-top:20px;">
+                <button class="btn btn-outline" onclick="closeExportModal()">Cancel</button>
+                <button class="btn btn-green" id="btn-do-export" onclick="doExport()">Export Now</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js?v=4"></script>
+</body>
+</html>

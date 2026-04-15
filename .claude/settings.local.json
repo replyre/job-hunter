@@ -1,0 +1,41 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install:*)",
+      "Bash(python -m pip install -r requirements.txt)",
+      "Bash(where python3:*)",
+      "Bash(where py:*)",
+      "Bash(ls /c/Python*/python.exe)",
+      "Read(//c/Users/anupf/AppData/Local/Programs/Python/**)",
+      "Bash(/c/Users/anupf/AppData/Local/Programs/Python/Python313/python.exe -m pip install -r requirements.txt)",
+      "Bash(/c/Users/anupf/AppData/Local/Programs/Python/Python313/python.exe -c \"from core.database import init_db; init_db\\(\\); print\\('DB initialized'\\)\")",
+      "Bash(/c/Users/anupf/AppData/Local/Programs/Python/Python313/python.exe -c ':*)",
+      "Bash(rm -f jobs.db)",
+      "Bash(/c/Users/anupf/AppData/Local/Programs/Python/Python313/python.exe -m uvicorn main:app --host 127.0.0.1 --port 8000)",
+      "Bash(curl -s http://127.0.0.1:8000/api/stats)",
+      "Bash(curl -s http://127.0.0.1:8000/api/jobs?min_score=50)",
+      "Bash(/c/Users/anupf/AppData/Local/Programs/Python/Python313/python.exe -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(f'Jobs with score>=50: {d[\\\\\"count\\\\\"]}'\\); [print\\(f'  {j[\\\\\"relevance_score\\\\\"]} | {j[\\\\\"title\\\\\"]} | {j[\\\\\"company\\\\\"]}'\\) for j in d['jobs'][:10]]\")",
+      "Bash(curl -s \"http://127.0.0.1:8000/api/jobs?min_score=20&limit=200\")",
+      "Bash(taskkill //F //IM python.exe)",
+      "Bash(curl -s \"http://127.0.0.1:8000/api/jobs?india_friendly=yes&limit=5\")",
+      "Bash(/c/Users/anupf/AppData/Local/Programs/Python/Python313/python.exe -m pip install gspread google-auth)",
+      "Bash(curl -s http://127.0.0.1:8000/api/export/sheets/status)",
+      "Bash(grep -E '\\\\.\\(py|js|html|json|txt\\)$')",
+      "Bash(grep -E '\\\\.\\(py|json|txt\\)$')",
+      "Bash(/c/Users/anupf/AppData/Local/Programs/Python/Python313/python.exe -c \"from core.database import init_db; init_db\\(\\); print\\('DB initialized with companies table'\\)\")",
+      "Bash(/c/Users/anupf/AppData/Local/Programs/Python/Python313/python.exe -c \"from core.database import init_db; init_db\\(\\); print\\('DB reset'\\)\")",
+      "Bash(curl -s http://127.0.0.1:8000/api/companies/stats)",
+      "Bash(curl:*)",
+      "Bash(/c/Users/anupf/AppData/Local/Programs/Python/Python313/python.exe -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(f'Stripe: {d[\\\\\"fetched\\\\\"]} fetched, {d[\\\\\"new\\\\\"]} new, {d[\\\\\"companies_crawled\\\\\"]} crawled'\\)\")",
+      "Bash(/c/Users/anupf/AppData/Local/Programs/Python/Python313/python.exe -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(f'Spotify: {d[\\\\\"fetched\\\\\"]} fetched, {d[\\\\\"new\\\\\"]} new'\\)\")",
+      "Bash(/c/Users/anupf/AppData/Local/Programs/Python/Python313/python.exe -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(f'Total in list: {d[\\\\\"total_in_list\\\\\"]}, Added: {d[\\\\\"added\\\\\"]}'\\)\")",
+      "Bash(/c/Users/anupf/AppData/Local/Programs/Python/Python313/python.exe -c \"from core.database import init_db; init_db\\(\\); print\\('DB migrated'\\)\")",
+      "Bash(/c/Users/anupf/AppData/Local/Programs/Python/Python313/python.exe -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d, indent=2\\)\\)\")",
+      "Bash(/c/Users/anupf/AppData/Local/Programs/Python/Python313/python.exe -c ' *)",
+      "Bash(/c/Users/anupf/AppData/Local/Programs/Python/Python313/python.exe -c \"from core.database import init_db; init_db\\(\\); print\\('DB migrated with email_log + emailed_at'\\)\")",
+      "Bash(/c/Users/anupf/AppData/Local/Programs/Python/Python313/python.exe -c \"from core.database import init_db; init_db\\(\\); print\\('DB migrated with api_usage table'\\)\")",
+      "Bash(/c/Users/anupf/AppData/Local/Programs/Python/Python313/python.exe -c \"from core.database import init_db; init_db\\(\\); print\\('DB migrated: last_seen + mark_for_email + search_queries'\\)\")",
+      "Bash(wc -l \"D:/VSCode/job scraper/README.md\" \"D:/VSCode/job scraper/docs/\"*.md)"
+    ]
+  }
+}
