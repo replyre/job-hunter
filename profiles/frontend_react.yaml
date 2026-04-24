@@ -1,0 +1,188 @@
+name: "Frontend / React (Mid-level)"
+description: "React/Next.js/TypeScript frontend roles. Mid-level. Adjust candidate bio before using."
+schema_version: 1
+
+search:
+  default_terms:
+    - "frontend react developer"
+    - "react engineer"
+    - "javascript frontend"
+    - "frontend developer"
+    - "nextjs developer"
+    - "typescript react"
+  title_keywords_positive:
+    - "frontend"
+    - "front-end"
+    - "front end"
+    - "react"
+    - "next.js"
+    - "nextjs"
+    - "ui"
+    - "javascript"
+    - "typescript"
+    - "web developer"
+    - "software engineer"
+    - "ui engineer"
+    - "full stack"
+    - "fullstack"
+  title_keywords_negative:
+    - "backend only"
+    - "back-end only"
+    - "ios"
+    - "android"
+    - "mobile"
+    - "devops"
+    - "data scientist"
+    - "machine learning"
+    - "ml engineer"
+    - "qa"
+    - "rust"
+    - "embedded"
+    - "intern"
+    - "internship"
+    - "trainee"
+  relevant_tech:
+    - "react"
+    - "redux"
+    - "typescript"
+    - "javascript"
+    - "nextjs"
+    - "next.js"
+    - "tailwind"
+    - "css"
+    - "scss"
+    - "html"
+    - "webpack"
+    - "vite"
+    - "jest"
+    - "cypress"
+    - "playwright"
+    - "node"
+    - "nodejs"
+    - "graphql"
+    - "rest"
+    - "accessibility"
+    - "a11y"
+    - "storybook"
+  jsearch_default_queries:
+    - { query: "frontend react developer", country: "IN", date_posted: "3days", remote_jobs_only: false }
+    - { query: "react engineer", country: "IN", date_posted: "3days", remote_jobs_only: false }
+    - { query: "typescript frontend", country: "IN", date_posted: "week", remote_jobs_only: false }
+    - { query: "nextjs developer", country: "IN", date_posted: "week", remote_jobs_only: false }
+    - { query: "frontend engineer remote", country: "IN", date_posted: "week", remote_jobs_only: true }
+    - { query: "react developer remote", country: "US", date_posted: "week", remote_jobs_only: true }
+
+scoring:
+  experience_target: "mid"
+  min_relevance_score: 50
+  min_score_to_store: 25
+  weights: { title: 35, tech: 35, experience: 15, signal: 15 }
+  core_tech:
+    - "react"
+    - "typescript"
+    - "javascript"
+    - "nextjs"
+    - "next.js"
+  backend_signals:
+    - "component"
+    - "hooks"
+    - "ssr"
+    - "client-side"
+    - "ui"
+    - "ux"
+    - "accessibility"
+    - "responsive"
+    - "design system"
+    - "storybook"
+    - "performance"
+    - "bundling"
+    - "hydration"
+
+location:
+  india_positive:
+    - "india"
+    - "asia"
+    - "worldwide"
+    - "global"
+    - "anywhere"
+    - "apac"
+    - "asia pacific"
+    - "asia-pacific"
+    - "remote - global"
+    - "remote global"
+    - "globally distributed"
+    - "work from anywhere"
+    - "mumbai"
+    - "bangalore"
+    - "bengaluru"
+    - "hyderabad"
+    - "pune"
+    - "delhi"
+    - "chennai"
+    - "kolkata"
+    - "noida"
+    - "gurgaon"
+    - "gurugram"
+    - "remote - india"
+    - "ist"
+  india_negative:
+    - "us only"
+    - "usa only"
+    - "us-only"
+    - "united states only"
+    - "us-based"
+    - "canada only"
+    - "uk only"
+    - "eu only"
+    - "europe only"
+    - "no visa sponsorship"
+    - "us citizen"
+    - "americas only"
+    - "north america only"
+  timezone_compatible:
+    - "ist"
+    - "gmt"
+    - "utc"
+    - "cet"
+    - "flexible"
+    - "async"
+    - "asynchronous"
+    - "overlap"
+    - "any timezone"
+  timezone_incompatible:
+    - "pst only"
+    - "est only"
+    - "cst only"
+    - "us timezone required"
+    - "us hours required"
+
+outreach:
+  candidate_name: "[Your Name]"
+  candidate_core_tech: ["react", "typescript", "nextjs"]
+  candidate_extra_tech: ["tailwind", "graphql", "node", "jest"]
+  linkedin_search_titles:
+    - { title: "Engineering Manager", label: "Eng Manager", category: "engineering" }
+    - { title: "Frontend Lead", label: "Frontend Lead", category: "engineering" }
+    - { title: "Head of Engineering", label: "Head of Eng", category: "engineering" }
+    - { title: "Design Engineer", label: "Design Engineer", category: "engineering" }
+    - { title: "CTO", label: "CTO", category: "executive" }
+    - { title: "Technical Recruiter", label: "Tech Recruiter", category: "hr" }
+  bio_short: "a frontend engineer shipping {stack} at production scale"
+  achievements:
+    - "Shipped a TypeScript/React app used by 10,000+ monthly users with sub-second page loads."
+    - "Built a design-system + component library in Storybook; cut UI dev cycle time by 40%."
+    - "Comfortable with Next.js SSR/ISR, performance budgeting, and accessibility (WCAG AA)."
+  dm_short_template: "{greeting}, noticed {company} is hiring for {title}. I'm {bio_short} — would love to learn more about the team."
+  dm_long_template: |
+    {greeting},
+
+    Saw {company} is hiring for {title}. The stack caught my eye — I've been building with {stack} in production.
+
+    {achievements}
+
+    Open to a 15-min chat?
+
+    Thanks,
+    {candidate_name}
+  email_digest_subject_role: "frontend"
+  email_greeting: "Your Daily Job Digest"

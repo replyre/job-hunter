@@ -1,0 +1,218 @@
+name: "Backend Python (3+ YOE)"
+description: "Python/Django/FastAPI backend, mid-level. Healthcare-SaaS sample outreach copy."
+schema_version: 1
+
+search:
+  default_terms:
+    - "backend developer python"
+    - "python django developer"
+    - "fastapi developer"
+    - "backend engineer python"
+    - "python developer"
+  title_keywords_positive:
+    - "backend"
+    - "back-end"
+    - "back end"
+    - "python"
+    - "django"
+    - "fastapi"
+    - "software engineer"
+    - "software developer"
+    - "full stack"
+    - "fullstack"
+    - "full-stack"
+    - "api developer"
+  title_keywords_negative:
+    - "frontend"
+    - "front-end"
+    - "front end"
+    - "ios"
+    - "android"
+    - "mobile"
+    - "devops"
+    - "data scientist"
+    - "machine learning"
+    - "ml engineer"
+    - "ui/ux"
+    - "designer"
+    - "qa"
+    - "test"
+    - "intern"
+    - "internship"
+    - "trainee"
+    - "junior"
+  relevant_tech:
+    - "python"
+    - "django"
+    - "fastapi"
+    - "flask"
+    - "celery"
+    - "redis"
+    - "postgresql"
+    - "postgres"
+    - "mysql"
+    - "mongodb"
+    - "docker"
+    - "kubernetes"
+    - "aws"
+    - "gcp"
+    - "rest"
+    - "graphql"
+    - "node"
+    - "nodejs"
+    - "express"
+    - "sql"
+    - "nosql"
+    - "microservices"
+    - "rabbitmq"
+    - "kafka"
+    - "elasticsearch"
+  jsearch_default_queries:
+    - { query: "python django backend developer", country: "IN", date_posted: "3days", remote_jobs_only: false }
+    - { query: "python backend engineer", country: "IN", date_posted: "3days", remote_jobs_only: false }
+    - { query: "django developer", country: "IN", date_posted: "3days", remote_jobs_only: false }
+    - { query: "fastapi developer", country: "IN", date_posted: "week", remote_jobs_only: false }
+    - { query: "python backend remote", country: "IN", date_posted: "week", remote_jobs_only: true }
+    - { query: "backend engineer python", country: "US", date_posted: "week", remote_jobs_only: true }
+
+scoring:
+  experience_target: "mid"
+  min_relevance_score: 50
+  min_score_to_store: 25
+  weights: { title: 35, tech: 35, experience: 15, signal: 15 }
+  core_tech:
+    - "python"
+    - "django"
+    - "fastapi"
+    - "flask"
+  backend_signals:
+    - "api"
+    - "backend"
+    - "back-end"
+    - "server-side"
+    - "microservice"
+    - "database"
+    - "rest"
+    - "graphql"
+    - "endpoint"
+
+location:
+  india_positive:
+    - "india"
+    - "asia"
+    - "worldwide"
+    - "global"
+    - "anywhere"
+    - "apac"
+    - "asia pacific"
+    - "asia-pacific"
+    - "remote - global"
+    - "remote global"
+    - "globally distributed"
+    - "work from anywhere"
+    - "location independent"
+    - "south asia"
+    - "southeast asia"
+    - "emea/apac"
+    - "mumbai"
+    - "bangalore"
+    - "bengaluru"
+    - "hyderabad"
+    - "pune"
+    - "delhi"
+    - "chennai"
+    - "kolkata"
+    - "noida"
+    - "gurgaon"
+    - "gurugram"
+    - "new delhi"
+    - "kochi"
+    - "jaipur"
+    - "ahmedabad"
+    - "remote - india"
+    - "ist"
+    - "indian standard time"
+  india_negative:
+    - "us only"
+    - "usa only"
+    - "us-only"
+    - "united states only"
+    - "must be located in the us"
+    - "must reside in the us"
+    - "us-based"
+    - "us based"
+    - "u.s. only"
+    - "u.s. based"
+    - "canada only"
+    - "uk only"
+    - "eu only"
+    - "europe only"
+    - "european union only"
+    - "uk-based"
+    - "eu-based"
+    - "must be authorized to work in the united states"
+    - "no visa sponsorship"
+    - "us citizen"
+    - "us work authorization"
+    - "est/cst/pst"
+    - "americas only"
+    - "americas timezone"
+    - "north america only"
+    - "na only"
+    - "latam only"
+  timezone_compatible:
+    - "ist"
+    - "gmt"
+    - "utc"
+    - "cet"
+    - "eet"
+    - "ast"
+    - "flexible"
+    - "async"
+    - "asynchronous"
+    - "overlap"
+    - "any timezone"
+    - "all timezones"
+  timezone_incompatible:
+    - "pst only"
+    - "est only"
+    - "cst only"
+    - "mst only"
+    - "pacific time only"
+    - "eastern time only"
+    - "us timezone required"
+    - "us hours required"
+    - "core hours pst"
+    - "core hours est"
+
+outreach:
+  candidate_name: "Parmanand"
+  candidate_core_tech: ["python", "django", "fastapi", "drf"]
+  candidate_extra_tech: ["postgresql", "redis", "aws", "docker", "microservices"]
+  linkedin_search_titles:
+    - { title: "Engineering Manager", label: "Eng Manager", category: "engineering" }
+    - { title: "Tech Lead", label: "Tech Lead", category: "engineering" }
+    - { title: "Head of Engineering", label: "Head of Eng", category: "engineering" }
+    - { title: "CTO", label: "CTO", category: "executive" }
+    - { title: "CEO Founder", label: "CEO / Founder", category: "executive" }
+    - { title: "Technical Recruiter", label: "Tech Recruiter", category: "hr" }
+    - { title: "HR Manager", label: "HR Manager", category: "hr" }
+  bio_short: "3+ years building {stack} backends"
+  achievements:
+    - "Backend Developer at DoctusTech, a healthcare SaaS serving 5,000+ US medical professionals."
+    - "Architected the Django/DRF platform, integrated 3 microservices, cut API response times 50% with Redis caching."
+    - "Previously built multitenant SaaS + Stripe integrations processing 2,000+ monthly transactions."
+  dm_short_template: "{greeting}, I noticed {company} is hiring for {title}. I have {bio_short} — shipped a healthcare SaaS serving 5,000+ users with sub-200ms APIs. Would love to connect."
+  dm_long_template: |
+    {greeting},
+
+    Noticed {company} is hiring for {title}. The stack caught my eye — I've been shipping {stack} backends for 3+ years.
+
+    {achievements}
+
+    Open to a 15-min chat to see if there's a fit?
+
+    Thanks,
+    {candidate_name}
+  email_digest_subject_role: "backend"
+  email_greeting: "Your Daily Job Digest"

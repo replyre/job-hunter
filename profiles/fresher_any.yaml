@@ -1,0 +1,202 @@
+name: "Fresher / Entry-Level (Any Stack)"
+description: "For new grads and interns — no YOE penalty, rewards junior/trainee signals, broad tech stack."
+schema_version: 1
+
+search:
+  default_terms:
+    - "software engineer fresher"
+    - "graduate software engineer"
+    - "entry level developer"
+    - "junior software engineer"
+    - "software engineer trainee"
+    - "new grad software engineer"
+  title_keywords_positive:
+    - "software engineer"
+    - "software developer"
+    - "engineer"
+    - "developer"
+    - "graduate"
+    - "entry level"
+    - "entry-level"
+    - "junior"
+    - "trainee"
+    - "intern"
+    - "associate"
+    - "fresher"
+    - "new grad"
+    - "associate engineer"
+    - "campus hire"
+  title_keywords_negative:
+    - "senior"
+    - "sr."
+    - "staff"
+    - "principal"
+    - "lead"
+    - "architect"
+    - "manager"
+    - "director"
+    - "head of"
+    - "vp"
+    - "10+ years"
+    - "8+ years"
+    - "5+ years"
+  relevant_tech:
+    - "python"
+    - "java"
+    - "javascript"
+    - "typescript"
+    - "c++"
+    - "c#"
+    - "go"
+    - "sql"
+    - "html"
+    - "css"
+    - "react"
+    - "node"
+    - "nodejs"
+    - "django"
+    - "flask"
+    - "spring"
+    - "git"
+    - "linux"
+    - "docker"
+    - "aws"
+    - "rest"
+    - "mysql"
+    - "postgresql"
+    - "mongodb"
+  jsearch_default_queries:
+    - { query: "graduate software engineer", country: "IN", date_posted: "week", remote_jobs_only: false }
+    - { query: "entry level software developer", country: "IN", date_posted: "week", remote_jobs_only: false }
+    - { query: "junior software engineer", country: "IN", date_posted: "week", remote_jobs_only: false }
+    - { query: "fresher software developer", country: "IN", date_posted: "3days", remote_jobs_only: false }
+    - { query: "software engineer trainee", country: "IN", date_posted: "week", remote_jobs_only: false }
+    - { query: "new grad software engineer", country: "IN", date_posted: "week", remote_jobs_only: true }
+
+scoring:
+  experience_target: "fresher"
+  min_relevance_score: 40
+  min_score_to_store: 20
+  weights: { title: 35, tech: 30, experience: 20, signal: 15 }
+  core_tech:
+    - "python"
+    - "java"
+    - "javascript"
+    - "sql"
+    - "git"
+  backend_signals:
+    - "learn"
+    - "mentor"
+    - "training"
+    - "onboarding"
+    - "rotation"
+    - "fundamental"
+    - "fresh graduate"
+    - "b.tech"
+    - "b.e."
+    - "mca"
+    - "0-1 year"
+    - "0-2 years"
+    - "campus"
+    - "new grad"
+    - "entry level"
+
+location:
+  india_positive:
+    - "india"
+    - "asia"
+    - "worldwide"
+    - "global"
+    - "anywhere"
+    - "apac"
+    - "asia pacific"
+    - "asia-pacific"
+    - "remote - global"
+    - "remote global"
+    - "globally distributed"
+    - "work from anywhere"
+    - "south asia"
+    - "southeast asia"
+    - "mumbai"
+    - "bangalore"
+    - "bengaluru"
+    - "hyderabad"
+    - "pune"
+    - "delhi"
+    - "chennai"
+    - "kolkata"
+    - "noida"
+    - "gurgaon"
+    - "gurugram"
+    - "new delhi"
+    - "kochi"
+    - "jaipur"
+    - "ahmedabad"
+    - "remote - india"
+    - "ist"
+    - "indian standard time"
+  india_negative:
+    - "us only"
+    - "usa only"
+    - "us-only"
+    - "united states only"
+    - "us-based"
+    - "u.s. only"
+    - "canada only"
+    - "uk only"
+    - "eu only"
+    - "europe only"
+    - "must be authorized to work in the united states"
+    - "no visa sponsorship"
+    - "us citizen"
+    - "us work authorization"
+    - "americas only"
+    - "north america only"
+  timezone_compatible:
+    - "ist"
+    - "gmt"
+    - "utc"
+    - "cet"
+    - "flexible"
+    - "async"
+    - "asynchronous"
+    - "overlap"
+    - "any timezone"
+  timezone_incompatible:
+    - "pst only"
+    - "est only"
+    - "cst only"
+    - "mst only"
+    - "us timezone required"
+    - "us hours required"
+
+outreach:
+  candidate_name: "[Your Name]"
+  candidate_core_tech: ["python", "java", "javascript", "sql"]
+  candidate_extra_tech: ["git", "html", "css", "linux"]
+  linkedin_search_titles:
+    - { title: "Engineering Manager", label: "Eng Manager", category: "engineering" }
+    - { title: "Tech Lead", label: "Tech Lead", category: "engineering" }
+    - { title: "Campus Recruiter", label: "Campus Recruiter", category: "hr" }
+    - { title: "Technical Recruiter", label: "Tech Recruiter", category: "hr" }
+    - { title: "HR Manager", label: "HR Manager", category: "hr" }
+    - { title: "University Recruiting", label: "University Recruiting", category: "hr" }
+  bio_short: "a fresh graduate with hands-on projects in {stack}"
+  achievements:
+    - "CS graduate with strong fundamentals in data structures, algorithms, and OOP."
+    - "Built 3+ full-stack projects on GitHub — REST APIs, authentication, database design."
+    - "Contributed to 2 open-source projects; comfortable shipping PRs and reading large codebases."
+  dm_short_template: "{greeting}, I saw {company} is hiring for {title}. I'm {bio_short}. Would love to connect and learn more about the role."
+  dm_long_template: |
+    {greeting},
+
+    I noticed {company} is hiring for {title}. The stack caught my eye — I've been building with {stack} through my coursework and side projects.
+
+    {achievements}
+
+    Would love a 15-min chat to hear what you look for in new grads.
+
+    Thanks,
+    {candidate_name}
+  email_digest_subject_role: "entry-level"
+  email_greeting: "Your Daily Job Digest"

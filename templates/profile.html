@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Job Scraper</title>
+    <link rel="stylesheet" href="/static/style.css?v=5">
+    <link rel="stylesheet" href="/static/profile.css?v=1">
+</head>
+<body>
+    <div class="header">
+        <div style="display:flex;align-items:center;gap:24px;">
+            <h1>Job Scraper</h1>
+            <nav class="nav-tabs">
+                <a href="/" class="nav-tab">Jobs</a>
+                <a href="/outreach" class="nav-tab">Outreach</a>
+                <a href="/profile" class="nav-tab active">Profile</a>
+            </nav>
+        </div>
+        <div class="header-actions">
+            <span id="active-indicator" style="font-size:12px;color:var(--text-muted);">Active: loading...</span>
+            <button class="btn btn-outline" onclick="exportActiveProfile()">Export YAML</button>
+            <button class="btn btn-yellow" onclick="rescoreAll(false)">Re-score All Jobs</button>
+            <button class="btn btn-primary" onclick="saveProfile(false)">Save</button>
+            <button class="btn btn-green" onclick="saveProfile(true)">Save &amp; Activate</button>
+        </div>
+    </div>
+
+    <div class="profile-layout">
+        <!-- Left: profile list -->
+        <aside class="profile-sidebar">
+            <div class="sidebar-head">
+                <div class="sidebar-title">Profiles</div>
+                <button class="btn btn-sm btn-outline" onclick="createBlankProfile()">+ New</button>
+            </div>
+            <div id="profile-list" class="profile-list">
+                <div class="loading"><div class="spinner"></div></div>
+            </div>
+
+            <div class="sidebar-head" style="margin-top:24px;">
+                <div class="sidebar-title">Import Preset</div>
+            </div>
+            <div id="preset-list" class="profile-list"></div>
+        </aside>
+
+        <!-- Right: editor -->
+        <section class="profile-editor">
+            <div class="editor-head">
+                <div class="editor-title-row">
+                    <input type="text" id="profile-name" class="editor-name" placeholder="Profile name">
+                    <span id="profile-source-chip" class="source-chip"></span>
+                </div>
+                <input type="text" id="profile-description" class="editor-description" placeholder="One-line description of this profile">
+            </div>
+
+            <nav class="tab-bar">
+                <a class="tab-link active" data-tab="search" onclick="switchTab('search')">Search</a>
+                <a class="tab-link" data-tab="scoring" onclick="switchTab('scoring')">Scoring</a>
+                <a class="tab-link" data-tab="location" onclick="switchTab('location')">Location</a>
+                <a class="tab-link" data-tab="outreach" onclick="switchTab('outreach')">Outreach</a>
+            </nav>
+
+            <!-- Search tab -->
+            <div class="tab-pane active" data-tab="search">
+                <div class="field">
+                    <label>Default Search Terms</label>
+                    <div class="help">Keywords you search for (displayed in UI only; not used by Remotive/RemoteOK which return all software jobs).</div>
+                    <div class="tag-editor" data-path="search.default_terms"></div>
+                </div>
+                <div class="field">
+                    <label>Title Keywords — Positive</label>
+                    <div class="help">Titles that <strong>boost</strong> the score when matched.</div>
+                    <div class="tag-editor" data-path="search.title_keywords_positive"></div>
+                </div>
+                <div class="field">
+                    <label>Title Keywords — Negative</label>
+                    <div class="help">Titles that <strong>penalize</strong> the score (-15 each).</div>
+                    <div class="tag-editor" data-path="search.title_keywords_negative"></div>
+                </div>
+                <div class="field">
+                    <label>Relevant Tech</label>
+                    <div class="help">All tech words we scan for in job descriptions. Matched ones appear as tags on each job.</div>
+                    <div class="tag-editor" data-path="search.relevant_tech"></div>
+                </div>
+                <div class="field">
+                    <label>JSearch Default Queries</label>
+                    <div class="help">Queries that get seeded into the Search Queries table when this profile is imported/activated with "Seed search queries" checked.</div>
+                    <div id="jsearch-queries-editor" class="query-rows"></div>
+                    <button class="btn btn-sm btn-outline" onclick="addJsearchRow()" style="margin-top:8px;">+ Add query</button>
+                </div>
+            </div>
+
+            <!-- Scoring tab -->
+            <div class="tab-pane" data-tab="scoring">
+                <div class="field">
+                    <label>Experience Target</label>
+                    <div class="help">Tells the scorer which experience level to reward. Replaces the hardcoded junior-penalty.</div>
+                    <div class="radio-row">
+                        <label><input type="radio" name="exp-target" value="fresher"> Fresher</label>
+                        <label><input type="radio" name="exp-target" value="junior"> Junior</label>
+                        <label><input type="radio" name="exp-target" value="mid"> Mid</label>
+                        <label><input type="radio" name="exp-target" value="senior"> Senior</label>
+                        <label><input type="radio" name="exp-target" value="any"> Any</label>
+                    </div>
+                </div>
+                <div class="field-row">
+                    <div class="field">
+                        <label>Min Score to Show (dashboard default)</label>
+                        <input type="number" id="min-relevance-score" min="0" max="100" class="num-input">
+                    </div>
+                    <div class="field">
+                        <label>Min Score to Store</label>
+                        <div class="help">Jobs scoring below this are dropped at collection time.</div>
+                        <input type="number" id="min-score-to-store" min="0" max="100" class="num-input">
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Scoring Weights (should sum to 100)</label>
+                    <div class="weights-grid">
+                        <div><span class="weight-label">Title</span><input type="number" id="w-title" min="0" class="num-input"></div>
+                        <div><span class="weight-label">Tech</span><input type="number" id="w-tech" min="0" class="num-input"></div>
+                        <div><span class="weight-label">Experience</span><input type="number" id="w-experience" min="0" class="num-input"></div>
+                        <div><span class="weight-label">Signals</span><input type="number" id="w-signal" min="0" class="num-input"></div>
+                    </div>
+                    <div id="weights-total" class="help" style="margin-top:6px;">Total: 100</div>
+                </div>
+                <div class="field">
+                    <label>Core Tech</label>
+                    <div class="help">Core tech (rewarded more heavily than secondary tech in scoring).</div>
+                    <div class="tag-editor" data-path="scoring.core_tech"></div>
+                </div>
+                <div class="field">
+                    <label>Domain Signals</label>
+                    <div class="help">Keywords in the job description that indicate it's the kind of role you want (e.g. "api" for backend, "component" for frontend, "learn" for fresher).</div>
+                    <div class="tag-editor" data-path="scoring.backend_signals"></div>
+                </div>
+            </div>
+
+            <!-- Location tab -->
+            <div class="tab-pane" data-tab="location">
+                <div class="field">
+                    <label>India-Positive Keywords</label>
+                    <div class="help">Presence of these marks a job as India-friendly.</div>
+                    <div class="tag-editor" data-path="location.india_positive"></div>
+                </div>
+                <div class="field">
+                    <label>India-Negative Keywords</label>
+                    <div class="help">Presence of these <strong>excludes</strong> the job from India.</div>
+                    <div class="tag-editor" data-path="location.india_negative"></div>
+                </div>
+                <div class="field">
+                    <label>Timezone-Compatible</label>
+                    <div class="tag-editor" data-path="location.timezone_compatible"></div>
+                </div>
+                <div class="field">
+                    <label>Timezone-Incompatible</label>
+                    <div class="tag-editor" data-path="location.timezone_incompatible"></div>
+                </div>
+            </div>
+
+            <!-- Outreach tab -->
+            <div class="tab-pane" data-tab="outreach">
+                <div class="field-row">
+                    <div class="field">
+                        <label>Your Name (DM signoff)</label>
+                        <input type="text" id="candidate-name" class="text-input">
+                    </div>
+                    <div class="field">
+                        <label>Email Digest — Role Word</label>
+                        <div class="help">Used in the email body: "N fresh <strong>{word}</strong> roles".</div>
+                        <input type="text" id="email-role-word" class="text-input">
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Email Greeting (subject-line top)</label>
+                    <input type="text" id="email-greeting" class="text-input">
+                </div>
+                <div class="field-row">
+                    <div class="field">
+                        <label>Sender Email (From address)</label>
+                        <div class="help">The Gmail account the digest is sent <em>from</em>. Overrides <code>SENDER_EMAIL</code> in <code>.env</code>. Its app password still comes from <code>SENDER_APP_PASSWORD</code> in <code>.env</code> — make sure they match.</div>
+                        <input type="email" id="sender-email" class="text-input" placeholder="e.g. you@gmail.com">
+                    </div>
+                    <div class="field">
+                        <label>Recipient Email (your inbox)</label>
+                        <div class="help">Where the daily digest is delivered. Overrides <code>RECIPIENT_EMAIL</code> in <code>.env</code>. Leave blank to use the env value.</div>
+                        <input type="email" id="recipient-email" class="text-input" placeholder="e.g. you@gmail.com">
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Candidate Core Tech</label>
+                    <div class="help">Your strongest skills — used to build the DM's stack phrase.</div>
+                    <div class="tag-editor" data-path="outreach.candidate_core_tech"></div>
+                </div>
+                <div class="field">
+                    <label>Candidate Extra Tech</label>
+                    <div class="tag-editor" data-path="outreach.candidate_extra_tech"></div>
+                </div>
+                <div class="field">
+                    <label>LinkedIn Search Titles</label>
+                    <div class="help">People titles we generate search URLs for (per outreach item).</div>
+                    <div id="linkedin-titles-editor" class="query-rows"></div>
+                    <button class="btn btn-sm btn-outline" onclick="addLinkedinTitleRow()" style="margin-top:8px;">+ Add title</button>
+                </div>
+                <div class="field">
+                    <label>Bio (short)</label>
+                    <div class="help">Used in templates via the <code>{bio_short}</code> token. <code>{stack}</code> token is expanded inside this string.</div>
+                    <input type="text" id="bio-short" class="text-input">
+                </div>
+                <div class="field">
+                    <label>Achievements (one per line)</label>
+                    <div class="help">Joined and injected as the <code>{achievements}</code> token in the long DM.</div>
+                    <textarea id="achievements" rows="5" class="textarea-input"></textarea>
+                </div>
+                <div class="field">
+                    <label>DM — Short Template</label>
+                    <div class="help">Tokens: <code>{greeting} {company} {title} {stack} {bio_short} {candidate_name}</code>. Capped at 300 chars.</div>
+                    <textarea id="dm-short" rows="3" class="textarea-input"></textarea>
+                </div>
+                <div class="field">
+                    <label>DM — Long Template</label>
+                    <div class="help">All short-template tokens plus <code>{achievements}</code>.</div>
+                    <textarea id="dm-long" rows="10" class="textarea-input"></textarea>
+                </div>
+            </div>
+
+            <div class="editor-footer">
+                <button class="btn btn-outline" onclick="duplicateProfile()">Duplicate</button>
+                <button class="btn btn-outline" style="color:var(--red);border-color:var(--red);" onclick="deleteActiveProfile()">Delete</button>
+            </div>
+        </section>
+    </div>
+
+    <script src="/static/profile.js?v=4"></script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 import uvicorn
-from fastapi import FastAPI, Query, Request
+from fastapi import FastAPI, Query, Request, HTTPException
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, PlainTextResponse
 from fastapi.templating import Jinja2Templates
 from typing import Optional
 from pydantic import BaseModel
@@ -14,12 +14,18 @@ from core.database import (
     update_company_crawl_status, get_company_stats,
     insert_outreach, get_outreach, update_outreach_status, update_outreach_notes,
     outreach_exists_for_job, get_outreach_stats,
-    get_search_queries, add_search_query, update_search_query, delete_search_query,
     toggle_mark_for_email, get_marked_jobs,
 )
 from core.collector import run_collection, run_company_crawl
 from core.sheets import export_to_sheet
-from core.emailer import run_daily_pipeline, send_daily_digest
+from core.emailer import run_daily_pipeline, send_daily_digest, generate_outreach_for_top_jobs
+from core.profile import (
+    get_active_profile, list_profiles, get_profile, create_profile,
+    update_profile, activate_profile, delete_profile, duplicate_profile,
+    import_preset, export_profile, list_presets,
+    get_active_profile_queries, add_active_profile_query,
+    update_active_profile_query, delete_active_profile_query,
+)
 from config.settings import (
     HOST, PORT, GOOGLE_SHEETS_CREDS, GOOGLE_SHEET_ID, HUNTER_API_KEY,
     DAILY_EMAIL_HOUR, DAILY_EMAIL_TIMEZONE, SENDER_EMAIL,
@@ -37,8 +43,10 @@ scheduler = AsyncIOScheduler(timezone=DAILY_EMAIL_TIMEZONE)
 async def startup():
     init_db()
 
-    # Schedule daily digest at configured hour IST
-    if SENDER_EMAIL:
+    # Schedule daily digest at configured hour IST. Sender can come from
+    # env (SENDER_EMAIL) or the active profile's outreach.sender_email.
+    profile_sender = (get_active_profile().get("outreach") or {}).get("sender_email") or ""
+    if SENDER_EMAIL or profile_sender:
         scheduler.add_job(
             run_daily_pipeline,
             CronTrigger(hour=DAILY_EMAIL_HOUR, minute=0),
@@ -49,7 +57,7 @@ async def startup():
         scheduler.start()
         print(f"Scheduled daily digest at {DAILY_EMAIL_HOUR}:00 IST", flush=True)
     else:
-        print("SENDER_EMAIL not set — daily digest disabled", flush=True)
+        print("No sender email configured (env or profile) — daily digest disabled", flush=True)
 
 
 @app.on_event("shutdown")
@@ -107,8 +115,14 @@ async def api_sources():
 
 
 @app.post("/api/collect")
-async def api_collect():
+async def api_collect(generate_outreach: bool = Query(True)):
+    from datetime import datetime
+    cutoff = datetime.utcnow().isoformat()
     stats = await run_collection()
+    if generate_outreach:
+        # Only pick from jobs seen in this collection run — avoids re-using
+        # stale 3-year-old python listings still sitting in the DB.
+        stats["outreach_generated"] = generate_outreach_for_top_jobs(seen_after=cutoff)
     return stats
 
 
@@ -289,16 +303,50 @@ async def api_sheets_status():
 async def api_get_outreach(
     status: Optional[str] = None,
     search: Optional[str] = None,
+    batch: Optional[str] = Query(None, pattern="^(new|old|all)$"),
     limit: int = Query(100, ge=1, le=500),
     offset: int = Query(0, ge=0),
 ):
-    items = get_outreach(status=status, search=search, limit=limit, offset=offset)
-    return {"outreach": items, "count": len(items)}
+    from core.database import get_last_outreach_batch_at
+    batch_filter = batch if batch in ("new", "old") else None
+    items = get_outreach(status=status, search=search, batch=batch_filter,
+                         limit=limit, offset=offset)
+    return {
+        "outreach": items,
+        "count": len(items),
+        "last_batch_at": get_last_outreach_batch_at(),
+    }
 
 
 @app.get("/api/outreach/stats")
 async def api_outreach_stats():
     return get_outreach_stats()
+
+
+class OutreachBulkDelete(BaseModel):
+    ids: list[str]
+
+
+@app.post("/api/outreach/bulk-delete")
+async def api_outreach_bulk_delete(body: OutreachBulkDelete):
+    from core.database import delete_outreach_bulk
+    deleted = delete_outreach_bulk(body.ids)
+    return {"deleted": deleted}
+
+
+@app.post("/api/outreach/refresh")
+async def api_outreach_refresh(limit: int = Query(15, ge=1, le=50),
+                               min_score: int = Query(40, ge=0, le=100)):
+    """Refresh = run a fresh collection, then generate outreach scoped to the
+    jobs that were actually returned by that collection. Previous batches stay
+    in place and show up in the 'Old' tab."""
+    from datetime import datetime
+    cutoff = datetime.utcnow().isoformat()
+    collect_stats = await run_collection()
+    generated = generate_outreach_for_top_jobs(
+        limit=limit, min_score=min_score, seen_after=cutoff,
+    )
+    return {"collected": collect_stats, "generated": generated}
 
 
 @app.post("/api/outreach/generate")
@@ -309,60 +357,12 @@ async def api_generate_outreach(
 ):
     """For top N high-scoring jobs without existing outreach,
     build LinkedIn search URLs + generate DMs. No API credits used."""
-    import hashlib
-    import json
-    from datetime import datetime
-    from core.hunter import build_linkedin_searches, generate_dm_template
-
-    # Get top jobs — India-friendly, high score
-    all_top = get_jobs(min_score=min_score, india_friendly=india_friendly, limit=200)
-    candidates = []
-    for j in all_top:
-        if outreach_exists_for_job(j["id"]):
-            continue
-        candidates.append(j)
-        if len(candidates) >= limit:
-            break
-
-    if not candidates:
+    generated = generate_outreach_for_top_jobs(
+        limit=limit, min_score=min_score, india_friendly=india_friendly,
+    )
+    if generated == 0:
         return {"generated": 0, "message": "No new jobs eligible for outreach"}
-
-    generated = 0
-    for job in candidates:
-        try:
-            searches = build_linkedin_searches(job["company"])
-            dms = generate_dm_template(job)
-
-            # Primary search URL = first one (Engineering Manager)
-            primary_url = searches[0]["url"] if searches else ""
-
-            # Store all search URLs as JSON in contact_linkedin field
-            all_searches_json = json.dumps(searches)
-
-            outreach_id = hashlib.md5(f"{job['id']}|linkedin".encode()).hexdigest()
-            insert_outreach({
-                "id": outreach_id,
-                "job_id": job["id"],
-                "job_title": job["title"],
-                "company": job["company"],
-                "company_domain": job.get("company_domain", ""),
-                "contact_name": "[Search LinkedIn]",
-                "contact_position": "Engineering Manager / Tech Lead / Head of Eng",
-                "contact_linkedin": primary_url,
-                "dm_short": dms["short"],
-                "dm_long": dms["long"],
-                "status": "pending",
-                "messaged_at": "", "replied_at": "", "followed_up_at": "",
-                "created_at": datetime.utcnow().isoformat(),
-                "notes": all_searches_json,  # store all 3 search URLs
-                "emailed_at": "",
-            })
-            generated += 1
-        except Exception as e:
-            print(f"Error for {job.get('company')}: {e}")
-            continue
-
-    return {"generated": generated, "candidates": len(candidates)}
+    return {"generated": generated}
 
 
 @app.patch("/api/outreach/{outreach_id}/status")
@@ -378,11 +378,11 @@ async def api_update_outreach_notes(outreach_id: str, notes: str = Query("")):
     return {"ok": True}
 
 
-# ── Search Queries (JSearch config) ────────────────────────────
+# ── Search Queries (stored on the active profile) ──────────────
 
 @app.get("/api/search-queries")
 async def api_get_queries():
-    return {"queries": get_search_queries()}
+    return {"queries": get_active_profile_queries()}
 
 
 class QueryInput(BaseModel):
@@ -394,7 +394,12 @@ class QueryInput(BaseModel):
 
 @app.post("/api/search-queries")
 async def api_add_query(body: QueryInput):
-    qid = add_search_query(body.query, body.country, body.date_posted, body.remote_jobs_only)
+    try:
+        qid = add_active_profile_query(
+            body.query, body.country, body.date_posted, body.remote_jobs_only,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     return {"id": qid, "ok": True}
 
 
@@ -408,13 +413,19 @@ class QueryPatch(BaseModel):
 
 @app.patch("/api/search-queries/{qid}")
 async def api_update_query(qid: int, body: QueryPatch):
-    update_search_query(qid, **body.model_dump(exclude_none=True))
+    try:
+        update_active_profile_query(qid, **body.model_dump(exclude_none=True))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     return {"ok": True}
 
 
 @app.delete("/api/search-queries/{qid}")
 async def api_delete_query(qid: int):
-    delete_search_query(qid)
+    try:
+        delete_active_profile_query(qid)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     return {"ok": True}
 
 
@@ -452,9 +463,19 @@ async def api_email_status():
     from core.database import get_email_logs
     import os
     logs = get_email_logs(limit=10)
+    out_cfg = get_active_profile().get("outreach") or {}
+    profile_sender = (out_cfg.get("sender_email") or "").strip()
+    profile_recipient = (out_cfg.get("recipient_email") or "").strip()
+    env_recipient = os.getenv("RECIPIENT_EMAIL", "")
+    effective_sender = profile_sender or SENDER_EMAIL
+    effective_recipient = profile_recipient or env_recipient
     return {
-        "sender_configured": bool(SENDER_EMAIL) and bool(os.getenv("SENDER_APP_PASSWORD")),
-        "recipient": os.getenv("RECIPIENT_EMAIL", ""),
+        "sender_configured": bool(effective_sender) and bool(os.getenv("SENDER_APP_PASSWORD")),
+        "sender": effective_sender,
+        "sender_source": "profile" if profile_sender else ("env" if SENDER_EMAIL else "none"),
+        "recipient": effective_recipient,
+        "recipient_source": "profile" if profile_recipient else ("env" if env_recipient else "none"),
+        "candidate_name": out_cfg.get("candidate_name") or "",
         "scheduled_hour": DAILY_EMAIL_HOUR,
         "timezone": DAILY_EMAIL_TIMEZONE,
         "recent_sends": logs,
@@ -501,6 +522,170 @@ async def api_hunter_status():
         return {"configured": True, "error": str(e)}
 
 
+# ── Profiles API ───────────────────────────────────────────────
+
+@app.get("/api/profiles")
+async def api_list_profiles():
+    return {"profiles": list_profiles(), "presets": list_presets()}
+
+
+@app.get("/api/profiles/active")
+async def api_active_profile():
+    cfg = get_active_profile()
+    return {
+        "id": cfg.get("_id"),
+        "name": cfg.get("_name"),
+        "config": {k: v for k, v in cfg.items() if not k.startswith("_")},
+    }
+
+
+@app.get("/api/profiles/{pid}")
+async def api_get_profile(pid: int):
+    row = get_profile(pid)
+    if not row:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    return row
+
+
+class ProfileInput(BaseModel):
+    name: str
+    description: str = ""
+    config: dict
+
+
+@app.post("/api/profiles")
+async def api_create_profile(body: ProfileInput):
+    try:
+        pid = create_profile(body.name, body.config, body.description)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return {"id": pid, "ok": True}
+
+
+@app.put("/api/profiles/{pid}")
+async def api_update_profile(pid: int, body: ProfileInput):
+    if not get_profile(pid):
+        raise HTTPException(status_code=404, detail="Profile not found")
+    update_profile(pid, config=body.config, name=body.name,
+                   description=body.description)
+    return {"ok": True}
+
+
+@app.post("/api/profiles/{pid}/activate")
+async def api_activate_profile(pid: int):
+    try:
+        activate_profile(pid)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    # Queries now live on the profile itself — no separate seeding needed.
+    queries_count = len((get_profile(pid) or {}).get("config", {}).get("search", {}).get("jsearch_default_queries") or [])
+    return {"ok": True, "active": pid, "queries": queries_count}
+
+
+@app.post("/api/profiles/{pid}/duplicate")
+async def api_duplicate_profile(pid: int, name: Optional[str] = Query(None)):
+    try:
+        new_id = duplicate_profile(pid, new_name=name)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    return {"ok": True, "id": new_id}
+
+
+@app.delete("/api/profiles/{pid}")
+async def api_delete_profile(pid: int):
+    try:
+        delete_profile(pid)
+    except ValueError as e:
+        # Thrown when trying to delete the active profile
+        raise HTTPException(status_code=400, detail=str(e))
+    return {"ok": True}
+
+
+class PresetImport(BaseModel):
+    preset_slug: str
+    activate: bool = False
+    overwrite: bool = False
+
+
+@app.post("/api/profiles/import")
+async def api_import_preset(body: PresetImport):
+    try:
+        pid = import_preset(body.preset_slug, activate=body.activate,
+                            overwrite=body.overwrite)
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    queries_count = len((get_profile(pid) or {}).get("config", {}).get("search", {}).get("jsearch_default_queries") or [])
+    return {"ok": True, "id": pid, "queries": queries_count}
+
+
+@app.get("/api/profiles/{pid}/export")
+async def api_export_profile(pid: int):
+    try:
+        yaml_text = export_profile(pid)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    return PlainTextResponse(yaml_text, media_type="application/x-yaml")
+
+
+@app.post("/api/profiles/rescore-all")
+async def api_rescore_all(
+    delete_below_min: bool = Query(False),
+):
+    """Re-score every job against the active profile. Optionally delete jobs
+    that now score below the profile's min_score_to_store."""
+    from core.database import get_connection
+    from core.scorer import score_job
+
+    profile = get_active_profile()
+    profile_id = profile.get("_id")
+    min_store = int((profile.get("scoring") or {}).get("min_score_to_store", 25))
+
+    conn = get_connection()
+    try:
+        rows = conn.execute(
+            "SELECT id, title, description, location, tech_stack FROM jobs"
+        ).fetchall()
+    finally:
+        conn.close()
+
+    updated = 0
+    deleted = 0
+    conn = get_connection()
+    try:
+        for r in rows:
+            result = score_job(r["title"], r["description"] or "",
+                               r["location"] or "", profile=profile)
+
+            if delete_below_min and result["score"] < min_store:
+                conn.execute("DELETE FROM jobs WHERE id = ?", (r["id"],))
+                deleted += 1
+                continue
+
+            existing_tech = set(
+                t.strip() for t in (r["tech_stack"] or "").split(",") if t.strip()
+            )
+            existing_tech.update(result["tech_stack"])
+            tech_stack = ", ".join(sorted(existing_tech))
+
+            conn.execute(
+                "UPDATE jobs SET relevance_score = ?, experience_level = ?, "
+                "india_friendly = ?, location_note = ?, tech_stack = ?, "
+                "scored_profile_id = ? WHERE id = ?",
+                (result["score"], result["experience_level"],
+                 result["india_friendly"], result["location_note"],
+                 tech_stack, profile_id, r["id"]),
+            )
+            updated += 1
+        conn.commit()
+    finally:
+        conn.close()
+
+    return {"ok": True, "scanned": len(rows), "updated": updated, "deleted": deleted}
+
+
 # ── UI Routes ──────────────────────────────────────────────────
 
 @app.get("/", response_class=HTMLResponse)
@@ -511,6 +696,11 @@ async def dashboard(request: Request):
 @app.get("/outreach", response_class=HTMLResponse)
 async def outreach_page(request: Request):
     return templates.TemplateResponse("outreach.html", {"request": request})
+
+
+@app.get("/profile", response_class=HTMLResponse)
+async def profile_page(request: Request):
+    return templates.TemplateResponse("profile.html", {"request": request})
 
 
 if __name__ == "__main__":

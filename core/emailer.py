@@ -1,16 +1,22 @@
-"""Email digest sender — composes and sends daily job digest to Parmanand."""
+"""Email digest sender — composes and sends the daily job digest.
+
+Candidate name, greeting, and the role word in the body copy come from the
+active profile's `outreach` section.
+"""
 
 import smtplib
 import ssl
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
+from typing import Optional
 from config.settings import (
     SENDER_EMAIL, SENDER_APP_PASSWORD, RECIPIENT_EMAIL, DAILY_JOBS_COUNT,
 )
 from core.database import (
     get_unemailed_outreach, mark_outreach_emailed, log_email,
 )
+from core.profile import get_active_profile
 
 
 def log(msg):
@@ -121,7 +127,15 @@ def _render_card(i: int, item: dict) -> str:
     """
 
 
-def build_email_html(items: list[dict], candidate_name: str = "Parmanand") -> str:
+def build_email_html(items: list[dict], candidate_name: str = None,
+                     profile: dict = None) -> str:
+    profile = profile or get_active_profile()
+    out_cfg = profile.get("outreach", {})
+    if candidate_name is None:
+        candidate_name = out_cfg.get("candidate_name") or "there"
+    role_word = out_cfg.get("email_digest_subject_role") or "matching"
+    greeting_title = out_cfg.get("email_greeting") or "Your Daily Job Digest"
+
     today = datetime.now().strftime("%B %d, %Y")
     cards = "".join(_render_card(i + 1, item) for i, item in enumerate(items))
 
@@ -135,14 +149,14 @@ def build_email_html(items: list[dict], candidate_name: str = "Parmanand") -> st
 <table width="640" cellpadding="0" cellspacing="0" border="0" style="max-width:640px;">
 
     <tr><td style="padding-bottom:24px;text-align:center;">
-        <div style="font-size:26px;font-weight:700;color:#111827;">Your Daily Job Digest</div>
+        <div style="font-size:26px;font-weight:700;color:#111827;">{_escape(greeting_title)}</div>
         <div style="font-size:14px;color:#6b7280;margin-top:4px;">{today} &middot; {len(items)} opportunities</div>
     </td></tr>
 
     <tr><td style="padding:16px 20px;background:#eef2ff;border:1px solid #c7d2fe;border-radius:10px;margin-bottom:20px;">
         <div style="font-size:13px;color:#3730a3;line-height:1.6;">
-            <strong>Hey {candidate_name} 👋</strong><br>
-            Here are {len(items)} fresh backend roles that match your profile. For each one, I've found the hiring manager's LinkedIn and written a personalized DM.<br><br>
+            <strong>Hey {_escape(candidate_name)} 👋</strong><br>
+            Here are {len(items)} fresh {_escape(role_word)} roles that match your profile. For each one, I've found the hiring manager's LinkedIn and written a personalized DM.<br><br>
             <strong>Your move:</strong> Click "Open LinkedIn Profile" → send connection request with the DM → apply to the job. Takes ~2 min per job.
         </div>
     </td></tr>
@@ -163,11 +177,17 @@ def build_email_html(items: list[dict], candidate_name: str = "Parmanand") -> st
 </html>"""
 
 
-def build_email_text(items: list[dict], candidate_name: str = "Parmanand") -> str:
+def build_email_text(items: list[dict], candidate_name: str = None,
+                     profile: dict = None) -> str:
     """Plain text fallback."""
+    profile = profile or get_active_profile()
+    out_cfg = profile.get("outreach", {})
+    if candidate_name is None:
+        candidate_name = out_cfg.get("candidate_name") or "there"
+    greeting_title = out_cfg.get("email_greeting") or "Your Daily Job Digest"
     today = datetime.now().strftime("%B %d, %Y")
     lines = [
-        f"Your Daily Job Digest - {today}",
+        f"{greeting_title} - {today}",
         f"{len(items)} opportunities for {candidate_name}",
         "=" * 60,
         "",
@@ -193,24 +213,35 @@ def send_daily_digest(limit: int = None, dry_run: bool = False) -> dict:
     """Send the daily digest email with top unemailed outreach items."""
     limit = limit or DAILY_JOBS_COUNT
 
-    if not SENDER_EMAIL or not SENDER_APP_PASSWORD:
-        return {"error": "SENDER_EMAIL or SENDER_APP_PASSWORD not configured"}
+    profile = get_active_profile()
+    out_cfg = profile.get("outreach") or {}
+    # Profile overrides env defaults for both sender and recipient.
+    sender = (out_cfg.get("sender_email") or "").strip() or SENDER_EMAIL
+    recipient = (out_cfg.get("recipient_email") or "").strip() or RECIPIENT_EMAIL
+
+    if not sender or not SENDER_APP_PASSWORD:
+        return {"error": "Sender email or SENDER_APP_PASSWORD not configured"}
+    if not recipient:
+        return {"error": "Recipient email not configured (set on profile or RECIPIENT_EMAIL in .env)"}
 
     items = get_unemailed_outreach(limit=limit)
     if not items:
         return {"sent": 0, "message": "No new outreach items to send"}
 
     today = datetime.now().strftime("%b %d")
-    subject = f"Daily Job Digest - {len(items)} opportunities ({today})"
+    role_word = out_cfg.get("email_digest_subject_role") or "job"
+    subject = f"Daily {role_word.title()} Digest - {len(items)} opportunities ({today})"
 
-    html = build_email_html(items)
-    text = build_email_text(items)
+    html = build_email_html(items, profile=profile)
+    text = build_email_text(items, profile=profile)
 
     if dry_run:
         return {
             "dry_run": True,
             "items_count": len(items),
             "subject": subject,
+            "sender": sender,
+            "recipient": recipient,
             "html_length": len(html),
             "preview": [{"title": i["job_title"], "company": i["company"]} for i in items],
         }
@@ -218,57 +249,60 @@ def send_daily_digest(limit: int = None, dry_run: bool = False) -> dict:
     from email.header import Header
     msg = MIMEMultipart("alternative")
     msg["Subject"] = Header(subject, "utf-8")
-    msg["From"] = SENDER_EMAIL
-    msg["To"] = RECIPIENT_EMAIL
+    msg["From"] = sender
+    msg["To"] = recipient
     msg.attach(MIMEText(text, "plain", "utf-8"))
     msg.attach(MIMEText(html, "html", "utf-8"))
 
     try:
         context = ssl.create_default_context()
         with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
-            server.login(SENDER_EMAIL, SENDER_APP_PASSWORD)
+            server.login(sender, SENDER_APP_PASSWORD)
             server.send_message(msg)
 
         outreach_ids = [i["id"] for i in items]
         mark_outreach_emailed(outreach_ids)
-        log_email(RECIPIENT_EMAIL, subject, len(items), outreach_ids, "sent")
-        log(f"Sent daily digest: {len(items)} items to {RECIPIENT_EMAIL}")
+        log_email(recipient, subject, len(items), outreach_ids, "sent")
+        log(f"Sent daily digest: {len(items)} items from {sender} to {recipient}")
 
-        return {"sent": len(items), "subject": subject, "recipient": RECIPIENT_EMAIL}
+        return {"sent": len(items), "subject": subject, "sender": sender, "recipient": recipient}
     except Exception as e:
         log(f"Email send failed: {e}")
-        log_email(RECIPIENT_EMAIL, subject, len(items),
+        log_email(recipient, subject, len(items),
                    [i["id"] for i in items], "failed", str(e))
         return {"error": str(e)}
 
 
-async def run_daily_pipeline(send: bool = True) -> dict:
-    """Full daily pipeline: collect jobs → generate outreach → send email."""
-    from core.collector import run_collection
-    from core.hunter import find_engineering_contacts, generate_dm_template, build_linkedin_search_url
-    from core.database import get_jobs, outreach_exists_for_job, insert_outreach
-    import hashlib
-
-    log("=== Daily Pipeline Start ===")
-
-    # Step 1: Collect fresh jobs
-    log("Step 1: Collecting jobs...")
-    collect_stats = await run_collection(include_companies=True)
-    log(f"  Fetched: {collect_stats.get('fetched', 0)}, New: {collect_stats.get('new', 0)}")
-
-    # Step 2: Generate outreach for top jobs without one
-    log("Step 2: Generating outreach...")
+def generate_outreach_for_top_jobs(limit: int = 15, min_score: int = 40,
+                                   india_friendly: str = "maybe",
+                                   seen_after: Optional[str] = None) -> int:
+    """Create outreach items for the highest-scoring jobs that don't have one yet.
+    If `seen_after` is given, only jobs refreshed at/after that timestamp qualify —
+    use this to scope generation to a specific collection run.
+    Returns the count generated. Stamps a batch timestamp so the UI can
+    separate 'new' vs 'old' outreach."""
+    from core.database import (
+        get_jobs, outreach_exists_for_job, insert_outreach,
+        set_last_outreach_batch_at,
+    )
     from core.hunter import build_linkedin_searches, generate_dm_template
-    import json
+    import hashlib, json
 
-    top_jobs = get_jobs(min_score=40, india_friendly="maybe", limit=50)
-    candidates = [j for j in top_jobs if not outreach_exists_for_job(j["id"])][:15]
+    profile = get_active_profile()
+    profile_id = profile.get("_id")
 
+    top_jobs = get_jobs(min_score=min_score, india_friendly=india_friendly,
+                         seen_after=seen_after, limit=limit * 5)
+    candidates = [j for j in top_jobs if not outreach_exists_for_job(j["id"])][:limit]
+
+    # All items in this run share the same timestamp so batch filtering is
+    # exact ("new" = created_at >= this timestamp).
+    batch_ts = datetime.utcnow().isoformat()
     generated = 0
     for job in candidates:
         try:
-            searches = build_linkedin_searches(job["company"])
-            dms = generate_dm_template(job)
+            searches = build_linkedin_searches(job["company"], profile=profile)
+            dms = generate_dm_template(job, profile=profile)
             primary_url = searches[0]["url"] if searches else ""
 
             outreach_id = hashlib.md5(f"{job['id']}|linkedin".encode()).hexdigest()
@@ -285,17 +319,35 @@ async def run_daily_pipeline(send: bool = True) -> dict:
                 "dm_long": dms["long"],
                 "status": "pending",
                 "messaged_at": "", "replied_at": "", "followed_up_at": "",
-                "created_at": datetime.utcnow().isoformat(),
+                "created_at": batch_ts,
                 "notes": json.dumps(searches),
                 "emailed_at": "",
+                "profile_id": profile_id,
             })
             generated += 1
         except Exception as e:
             log(f"  Skipped {job.get('company')}: {e}")
             continue
+
+    if generated > 0:
+        set_last_outreach_batch_at(batch_ts)
+    return generated
+
+
+async def run_daily_pipeline(send: bool = True) -> dict:
+    """Full daily pipeline: collect jobs → generate outreach → send email."""
+    from core.collector import run_collection
+
+    log("=== Daily Pipeline Start ===")
+
+    log("Step 1: Collecting jobs...")
+    collect_stats = await run_collection(include_companies=True)
+    log(f"  Fetched: {collect_stats.get('fetched', 0)}, New: {collect_stats.get('new', 0)}")
+
+    log("Step 2: Generating outreach...")
+    generated = generate_outreach_for_top_jobs()
     log(f"  Generated {generated} new outreach items")
 
-    # Step 3: Send email
     email_result = {"skipped": True}
     if send:
         log("Step 3: Sending email...")

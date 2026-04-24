@@ -13,18 +13,28 @@
             <nav class="nav-tabs">
                 <a href="/" class="nav-tab">Jobs</a>
                 <a href="/outreach" class="nav-tab active">Outreach</a>
+                <a href="/profile" class="nav-tab">Profile</a>
             </nav>
         </div>
         <div class="header-actions">
+            <span id="active-profile-indicator" style="font-size:12px;color:var(--text-muted);">Profile: …</span>
             <span id="hunter-status" style="font-size:12px;color:var(--text-muted);"></span>
             <span id="email-status" style="font-size:12px;color:var(--text-muted);"></span>
             <button class="btn btn-outline" id="btn-preview" onclick="previewEmail()">Preview Email</button>
             <button class="btn btn-yellow" id="btn-send" onclick="sendEmailNow()">Send Email Now</button>
-            <button class="btn btn-primary" id="btn-generate" onclick="generateOutreach()">Find Contacts for Top Jobs</button>
+            <button class="btn btn-outline" id="btn-sync" onclick="syncOutreach()" title="Generate 15 new outreach items from jobs already in the DB — no collection run">⟳ Sync</button>
+            <button class="btn btn-green" id="btn-refresh" onclick="refreshOutreach()" title="Run a fresh Collect Jobs, then generate 15 new outreach items from the results">🔄 Refresh</button>
         </div>
     </div>
 
     <div class="stats-bar" id="stats-bar"></div>
+
+    <nav class="tab-bar" style="padding:0 32px;">
+        <a class="tab-link active" data-batch="new" onclick="switchBatch('new')">New (latest batch)</a>
+        <a class="tab-link" data-batch="old" onclick="switchBatch('old')">Old</a>
+        <a class="tab-link" data-batch="all" onclick="switchBatch('all')">All</a>
+        <span id="batch-info" style="margin-left:auto;font-size:12px;color:var(--text-muted);align-self:center;"></span>
+    </nav>
 
     <div class="filters">
         <div class="filter-group">
@@ -32,6 +42,7 @@
             <select id="filter-status" onchange="loadOutreach()">
                 <option value="">All</option>
                 <option value="pending" selected>Pending (Ready to Send)</option>
+                <option value="emailed">Emailed (Ready to Message)</option>
                 <option value="messaged">Messaged</option>
                 <option value="replied">Replied</option>
                 <option value="followed_up">Followed Up</option>
@@ -41,12 +52,17 @@
             <label>Search</label>
             <input type="text" id="filter-search" placeholder="Company, role, contact...">
         </div>
+        <div id="bulk-actions" class="filter-group" hidden style="margin-left:auto;flex-direction:row;align-items:flex-end;gap:8px;">
+            <label style="font-size:12px;"><input type="checkbox" id="select-all" onchange="toggleSelectAll(this.checked)"> Select all</label>
+            <span id="selected-count" style="font-size:12px;color:var(--text-muted);">0 selected</span>
+            <button class="btn btn-outline" style="color:var(--red);border-color:var(--red);" onclick="bulkDeleteSelected()">Delete Selected</button>
+        </div>
     </div>
 
     <div class="content">
         <div id="outreach-list"></div>
     </div>
 
-    <script src="/static/outreach.js"></script>
+    <script src="/static/outreach.js?v=7"></script>
 </body>
 </html>

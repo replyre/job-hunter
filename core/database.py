@@ -46,6 +46,10 @@ def init_db():
         conn.execute("ALTER TABLE jobs ADD COLUMN mark_for_email INTEGER DEFAULT 0")
     except sqlite3.OperationalError:
         pass
+    try:
+        conn.execute("ALTER TABLE jobs ADD COLUMN scored_profile_id INTEGER DEFAULT NULL")
+    except sqlite3.OperationalError:
+        pass
 
     # Companies table
     conn.execute("""
@@ -91,6 +95,10 @@ def init_db():
     # Migration
     try:
         conn.execute("ALTER TABLE outreach ADD COLUMN emailed_at TEXT DEFAULT ''")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        conn.execute("ALTER TABLE outreach ADD COLUMN profile_id INTEGER DEFAULT NULL")
     except sqlite3.OperationalError:
         pass
 
@@ -152,6 +160,28 @@ def init_db():
                 (*q, ts),
             )
 
+    # Profiles (per-user search/scoring/outreach config)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS profiles (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE,
+            description TEXT DEFAULT '',
+            config_json TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            source TEXT DEFAULT 'custom'
+        )
+    """)
+
+    # Generic app-wide settings (currently holds active_profile_id)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS app_settings (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+        )
+    """)
+
     # Indexes
     conn.execute("CREATE INDEX IF NOT EXISTS idx_relevance ON jobs(relevance_score DESC)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_outreach_status ON outreach(status)")
@@ -164,8 +194,18 @@ def init_db():
     conn.execute("CREATE INDEX IF NOT EXISTS idx_company_domain ON jobs(company_domain)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_company_ats ON companies(ats_platform)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_company_status ON companies(crawl_status)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_profiles_name ON profiles(name)")
     conn.commit()
     conn.close()
+
+    # First-run seed: if no profiles exist, create "Backend Python (legacy)"
+    # from current settings.py constants and set it active. Idempotent.
+    try:
+        from core.profile import ensure_first_run_seed
+        ensure_first_run_seed()
+    except Exception as e:
+        # Don't block server startup on a seed failure — log and continue.
+        print(f"[init_db] profile seed skipped: {e}", flush=True)
 
 
 # ── Jobs CRUD ──────────────────────────────────────────────────
@@ -186,17 +226,20 @@ def insert_job(job_dict: dict) -> str:
             conn.execute("UPDATE jobs SET last_seen = ? WHERE id = ?", (now, job_dict["id"]))
             conn.commit()
             return "updated"
+        job_dict.setdefault("scored_profile_id", None)
         conn.execute("""
             INSERT INTO jobs (id, title, company, location, description, url,
                             source, posted_date, discovered_at, tech_stack,
                             experience_level, relevance_score, status,
                             company_domain, salary, job_type,
-                            india_friendly, location_note, last_seen)
+                            india_friendly, location_note, last_seen,
+                            scored_profile_id)
             VALUES (:id, :title, :company, :location, :description, :url,
                     :source, :posted_date, :discovered_at, :tech_stack,
                     :experience_level, :relevance_score, :status,
                     :company_domain, :salary, :job_type,
-                    :india_friendly, :location_note, :last_seen)
+                    :india_friendly, :location_note, :last_seen,
+                    :scored_profile_id)
         """, job_dict)
         conn.commit()
         return "new"
@@ -255,6 +298,7 @@ def get_jobs(
     tech: Optional[str] = None,
     india_friendly: Optional[str] = None,
     company_domain: Optional[str] = None,
+    seen_after: Optional[str] = None,     # ISO timestamp; only jobs refreshed at/after this
     limit: int = 100,
     offset: int = 0,
 ) -> list[dict]:
@@ -288,6 +332,9 @@ def get_jobs(
     if company_domain:
         query += " AND company_domain = ?"
         params.append(company_domain)
+    if seen_after:
+        query += " AND last_seen >= ?"
+        params.append(seen_after)
 
     query += " ORDER BY relevance_score DESC, discovered_at DESC LIMIT ? OFFSET ?"
     params.extend([limit, offset])
@@ -427,16 +474,17 @@ def update_company_crawl_status(company_id: str, status: str, last_crawled: str 
 def insert_outreach(item: dict) -> bool:
     conn = get_connection()
     try:
+        item.setdefault("profile_id", None)
         conn.execute("""
             INSERT OR REPLACE INTO outreach
                 (id, job_id, job_title, company, company_domain,
                  contact_name, contact_position, contact_linkedin,
                  dm_short, dm_long, status, messaged_at, replied_at,
-                 followed_up_at, created_at, notes)
+                 followed_up_at, created_at, notes, profile_id)
             VALUES (:id, :job_id, :job_title, :company, :company_domain,
                     :contact_name, :contact_position, :contact_linkedin,
                     :dm_short, :dm_long, :status, :messaged_at, :replied_at,
-                    :followed_up_at, :created_at, :notes)
+                    :followed_up_at, :created_at, :notes, :profile_id)
         """, item)
         conn.commit()
         return True
@@ -449,6 +497,7 @@ def insert_outreach(item: dict) -> bool:
 def get_outreach(
     status: Optional[str] = None,
     search: Optional[str] = None,
+    batch: Optional[str] = None,   # "new" | "old" | None
     limit: int = 100,
     offset: int = 0,
 ) -> list[dict]:
@@ -468,12 +517,73 @@ def get_outreach(
         query += " AND (o.company LIKE ? OR o.job_title LIKE ? OR o.contact_name LIKE ?)"
         s = f"%{search}%"
         params.extend([s, s, s])
-    query += " ORDER BY j.relevance_score DESC, o.created_at DESC LIMIT ? OFFSET ?"
+    if batch in ("new", "old"):
+        batch_at = get_last_outreach_batch_at()
+        if batch_at:
+            op = ">=" if batch == "new" else "<"
+            query += f" AND o.created_at {op} ?"
+            params.append(batch_at)
+        elif batch == "new":
+            # No recorded batch yet — treat the most recent generation as "new"
+            # by returning nothing until a generation actually runs.
+            query += " AND 0"
+    query += " ORDER BY o.created_at DESC, j.relevance_score DESC LIMIT ? OFFSET ?"
     params.extend([limit, offset])
 
     rows = conn.execute(query, params).fetchall()
     conn.close()
     return [dict(r) for r in rows]
+
+
+def delete_outreach_bulk(ids: list[str]) -> int:
+    if not ids:
+        return 0
+    conn = get_connection()
+    try:
+        placeholders = ",".join(["?"] * len(ids))
+        cur = conn.execute(
+            f"DELETE FROM outreach WHERE id IN ({placeholders})", ids,
+        )
+        conn.commit()
+        return cur.rowcount
+    finally:
+        conn.close()
+
+
+def delete_all_outreach() -> int:
+    conn = get_connection()
+    try:
+        cur = conn.execute("DELETE FROM outreach")
+        conn.commit()
+        return cur.rowcount
+    finally:
+        conn.close()
+
+
+def set_last_outreach_batch_at(ts: str) -> None:
+    conn = get_connection()
+    try:
+        conn.execute(
+            "INSERT OR REPLACE INTO app_settings (key, value, updated_at) "
+            "VALUES ('last_outreach_batch_at', ?, ?)",
+            (ts, ts),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def get_last_outreach_batch_at() -> Optional[str]:
+    conn = get_connection()
+    try:
+        row = conn.execute(
+            "SELECT value FROM app_settings WHERE key = 'last_outreach_batch_at'"
+        ).fetchone()
+    except sqlite3.OperationalError:
+        return None
+    finally:
+        conn.close()
+    return row["value"] if row else None
 
 
 def update_outreach_status(outreach_id: str, status: str, field: str = None):
@@ -543,11 +653,19 @@ def get_unemailed_outreach(limit: int = 15, only_marked: bool = False) -> list[d
 
 
 def mark_outreach_emailed(outreach_ids: list[str]):
+    """Flip sent items from pending → emailed so they drop out of the
+    'ready to send' queue. Items already in messaged/replied/followed_up
+    keep their current status (we only update ones still 'pending')."""
     from datetime import datetime
     conn = get_connection()
     ts = datetime.utcnow().isoformat()
     for oid in outreach_ids:
-        conn.execute("UPDATE outreach SET emailed_at = ? WHERE id = ?", (ts, oid))
+        conn.execute(
+            "UPDATE outreach SET emailed_at = ?, "
+            "status = CASE WHEN status = 'pending' THEN 'emailed' ELSE status END "
+            "WHERE id = ?",
+            (ts, oid),
+        )
     conn.commit()
     conn.close()
 
