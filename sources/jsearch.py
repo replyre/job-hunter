@@ -10,23 +10,15 @@ from config.settings import RAPIDAPI_KEY
 from core.database import log_api_call
 
 
-# Rotate these queries to maximize coverage per call
-DEFAULT_QUERIES = [
-    {"query": "python django backend developer", "country": "IN", "date_posted": "3days"},
-    {"query": "python backend engineer", "country": "IN", "date_posted": "3days"},
-    {"query": "django developer", "country": "IN", "date_posted": "3days"},
-    {"query": "fastapi developer", "country": "IN", "date_posted": "week"},
-    {"query": "python backend remote", "country": "IN", "remote_jobs_only": "true", "date_posted": "week"},
-    {"query": "backend engineer python", "country": "US", "remote_jobs_only": "true", "date_posted": "week"},
-]
-
-
 class JSearchSource(BaseSource):
     name = "jsearch"
     BASE_URL = "https://jsearch.p.rapidapi.com/search"
 
     def __init__(self, queries: list[dict] = None):
-        self.queries = queries or DEFAULT_QUERIES
+        # Queries are now sourced from the DB (search_queries table), which is
+        # seeded per profile on activation / preset import. If the caller passes
+        # nothing, this source is a no-op (returns empty list from fetch()).
+        self.queries = queries or []
         self.api_key = RAPIDAPI_KEY
 
     async def fetch(self) -> list[Job]:

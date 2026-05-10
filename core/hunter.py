@@ -1,69 +1,72 @@
 """LinkedIn search URL builder + DM generator.
-Previously used Hunter.io — now uses LinkedIn people search directly (free, unlimited)."""
+
+All candidate-specific text (name, bio, achievements) lives in the active
+profile's `outreach` section. See core/profile.py.
+"""
 
 import urllib.parse
 
-
-# Title filters we build search URLs for (ranked priority)
-SEARCH_TITLES = [
-    ("Engineering Manager", "eng-manager"),
-    ("Tech Lead", "tech-lead"),
-    ("Head of Engineering", "head-eng"),
-    ("Engineering Director", "eng-director"),
-    ("Backend", "backend"),
-    ("CTO", "cto"),
-    ("VP Engineering", "vp-eng"),
-]
+from core.profile import get_active_profile
 
 
-def build_linkedin_searches(company: str) -> list[dict]:
-    """Build multiple LinkedIn people search URLs for a company.
-    Covers engineering decision makers + HR/recruiters + C-level."""
+def build_linkedin_searches(company: str, profile: dict = None) -> list[dict]:
+    """Build LinkedIn people search URLs using the profile's search titles."""
+    profile = profile or get_active_profile()
+    titles = profile["outreach"].get("linkedin_search_titles") or []
+
     base = "https://www.linkedin.com/search/results/people/"
-
-    # All search angles — grouped by category
-    search_configs = [
-        # Engineering leadership (best response rate)
-        ("Engineering Manager", "Eng Manager", "engineering"),
-        ("Tech Lead", "Tech Lead", "engineering"),
-        ("Head of Engineering", "Head of Eng", "engineering"),
-        # C-level (small companies)
-        ("CTO", "CTO", "executive"),
-        ("CEO Founder", "CEO / Founder", "executive"),
-        # HR / Recruiters (gatekeepers but worth trying)
-        ("Technical Recruiter", "Tech Recruiter", "hr"),
-        ("HR Manager", "HR Manager", "hr"),
-    ]
-
     searches = []
-    for title, short_label, category in search_configs:
+    for entry in titles:
+        title = entry.get("title", "")
+        if not title:
+            continue
+        label = entry.get("label") or title
+        category = entry.get("category") or "engineering"
         keywords = f"{company} {title}"
         url = f"{base}?keywords={urllib.parse.quote(keywords)}"
         searches.append({
-            "label": short_label,
+            "label": label,
             "title": title,
             "category": category,
             "url": url,
         })
-
     return searches
 
 
 def build_linkedin_search_url(first_name: str, last_name: str, company: str) -> str:
-    """Legacy: Build LinkedIn search from a specific person's name.
-    Kept for backwards compatibility."""
+    """Legacy: Build LinkedIn search from a specific person's name."""
     query = f"{first_name} {last_name} {company}".strip()
     return f"https://www.linkedin.com/search/results/people/?keywords={urllib.parse.quote(query)}"
 
 
-def generate_dm_template(job: dict, contact: dict = None, candidate_name: str = "Parmanand") -> dict:
-    """Generate a personalized LinkedIn DM.
-    Works without a specific contact name (uses 'Hi there' / 'Hi [name]' if known).
-    """
+def _safe_format(template: str, tokens: dict) -> str:
+    """.format() that tolerates missing tokens — unknown placeholders render empty."""
+    class _Silent(dict):
+        def __missing__(self, key):
+            return ""
+    try:
+        return template.format_map(_Silent(tokens))
+    except (IndexError, KeyError, ValueError):
+        return template
+
+
+def generate_dm_template(job: dict, contact: dict = None,
+                        profile: dict = None) -> dict:
+    """Generate a short + long LinkedIn DM using the profile's templates."""
+    profile = profile or get_active_profile()
+    out_cfg = profile["outreach"]
+
+    candidate_name = out_cfg.get("candidate_name") or "[Your Name]"
+    candidate_core = [t.lower() for t in (out_cfg.get("candidate_core_tech") or [])]
+    candidate_extra = [t.lower() for t in (out_cfg.get("candidate_extra_tech") or [])]
+    bio_short_template = out_cfg.get("bio_short") or ""
+    achievements = out_cfg.get("achievements") or []
+    dm_short_template = out_cfg.get("dm_short_template") or ""
+    dm_long_template = out_cfg.get("dm_long_template") or ""
+
     first_name = ""
     if contact and contact.get("first_name"):
         first_name = contact["first_name"]
-
     greeting = f"Hi {first_name}" if first_name else "Hi there"
 
     title = (job.get("title") or "this role").strip()
@@ -71,51 +74,43 @@ def generate_dm_template(job: dict, contact: dict = None, candidate_name: str = 
         title = title.split(" - ")[0]
     company = (job.get("company") or "your team").strip()
 
-    # Match Parmanand's tech stack against job
-    tech_stack = job.get("tech_stack", "")
-    tech_bits = [t.strip() for t in tech_stack.split(",") if t.strip()]
-
-    candidate_core = ["python", "django", "fastapi", "drf"]
-    candidate_extra = ["postgresql", "redis", "aws", "docker", "microservices"]
-
-    matched_core = [t for t in tech_bits if t.lower() in candidate_core]
+    tech_stack_str = job.get("tech_stack", "") or ""
+    tech_bits = [t.strip().lower() for t in tech_stack_str.split(",") if t.strip()]
+    matched_core = [t for t in tech_bits if t in candidate_core]
 
     if matched_core:
         stack_phrase = "/".join(matched_core[:2]).title()
+    elif candidate_core:
+        stack_phrase = "/".join(candidate_core[:2]).title()
+    elif candidate_extra:
+        stack_phrase = "/".join(candidate_extra[:2]).title()
     else:
-        stack_phrase = "Python/Django"
+        stack_phrase = "the stack"
 
-    # Short DM for connection note (under 300 chars)
-    short = (
-        f"{greeting}, I noticed {company} is hiring for {title}. "
-        f"I have 3+ years building {stack_phrase} backends — shipped a healthcare "
-        f"SaaS serving 5,000+ users with sub-200ms APIs. Would love to connect."
-    )
+    bio_short = _safe_format(bio_short_template, {"stack": stack_phrase})
+    achievements_block = "\n\n".join(achievements)
+
+    tokens = {
+        "greeting": greeting,
+        "company": company,
+        "title": title,
+        "stack": stack_phrase,
+        "bio_short": bio_short,
+        "achievements": achievements_block,
+        "candidate_name": candidate_name,
+    }
+
+    short = _safe_format(dm_short_template, tokens).strip()
+    long_ = _safe_format(dm_long_template, tokens).strip()
+
+    # Hard cap short DM (LinkedIn connection note limit = 300 chars)
     if len(short) > 300:
-        short = (
-            f"{greeting}, saw {title} opening at {company}. "
-            f"3+ yrs {stack_phrase} backend experience, shipped healthcare SaaS. "
-            f"Would love to connect."
-        )
+        short = short[:297].rstrip() + "..."
 
-    # Long DM for direct messages
-    long = (
-        f"{greeting},\n\n"
-        f"Noticed {company} is hiring for {title}. The stack caught my eye — "
-        f"I've been shipping {stack_phrase} backends for 3+ years.\n\n"
-        f"Current role: Backend Developer at DoctusTech, a healthcare SaaS serving "
-        f"5,000+ US medical professionals. I architected the Django/DRF platform, "
-        f"integrated 3 microservices, and cut API response times 50% with Redis caching.\n\n"
-        f"Previously built multitenant SaaS + Stripe integrations processing 2,000+ "
-        f"monthly transactions.\n\n"
-        f"Open to a 15-min chat to see if there's a fit?\n\n"
-        f"Thanks,\n{candidate_name}"
-    )
-
-    return {"short": short[:300], "long": long}
+    return {"short": short, "long": long_}
 
 
-# ── Deprecated: Hunter API (kept for reference, no longer used) ──
+# ── Deprecated: Hunter API (kept for backward-compatible imports) ──
 
 async def find_engineering_contacts(domain: str, api_key: str = None, limit: int = 20) -> dict:
     """DEPRECATED. No longer used — we use LinkedIn search URLs instead."""

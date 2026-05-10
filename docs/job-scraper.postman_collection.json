@@ -1,0 +1,621 @@
+{
+  "info": {
+    "name": "Job Scraper API",
+    "description": "Postman collection for the Job Scraper FastAPI backend (main.py v2.0.0). Base URL default: http://127.0.0.1:8000",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "job-scraper-collection-v1"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8000",
+      "type": "string"
+    },
+    {
+      "key": "job_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "company_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "outreach_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "query_id",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Jobs",
+      "item": [
+        {
+          "name": "List jobs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jobs?min_score=0&limit=50&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jobs"],
+              "query": [
+                { "key": "source", "value": "", "disabled": true, "description": "Partial match on source name" },
+                { "key": "status", "value": "new", "disabled": true, "description": "new | reviewed | applied | stale" },
+                { "key": "min_score", "value": "0", "description": "0-100" },
+                { "key": "search", "value": "", "disabled": true, "description": "Free text on title/company/description" },
+                { "key": "location", "value": "", "disabled": true },
+                { "key": "tech", "value": "", "disabled": true, "description": "e.g. python, django" },
+                { "key": "india_friendly", "value": "yes", "disabled": true, "description": "yes | maybe | no" },
+                { "key": "company_domain", "value": "", "disabled": true },
+                { "key": "limit", "value": "50", "description": "1-500" },
+                { "key": "offset", "value": "0" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get job by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jobs/{{job_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jobs", "{{job_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update job status",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jobs/{{job_id}}/status?status=applied",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jobs", "{{job_id}}", "status"],
+              "query": [
+                { "key": "status", "value": "applied", "description": "new | reviewed | applied | stale" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Toggle mark-for-email",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jobs/{{job_id}}/mark-for-email",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jobs", "{{job_id}}", "mark-for-email"]
+            }
+          }
+        },
+        {
+          "name": "List marked jobs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jobs/marked",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jobs", "marked"]
+            }
+          }
+        },
+        {
+          "name": "Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "stats"]
+            }
+          }
+        },
+        {
+          "name": "Sources",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sources",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sources"]
+            }
+          }
+        },
+        {
+          "name": "Trigger collection",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/collect",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "collect"]
+            },
+            "description": "Runs full collection pipeline (job boards + company crawl). Long-running."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Companies",
+      "item": [
+        {
+          "name": "List companies",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/companies?limit=200&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "companies"],
+              "query": [
+                { "key": "ats_platform", "value": "greenhouse", "disabled": true, "description": "greenhouse | lever | ashby | workable | unknown" },
+                { "key": "crawl_status", "value": "active", "disabled": true, "description": "active | paused" },
+                { "key": "india_friendly", "value": "yes", "disabled": true },
+                { "key": "search", "value": "", "disabled": true },
+                { "key": "limit", "value": "200" },
+                { "key": "offset", "value": "0" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Add company",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Acme Corp\",\n  \"domain\": \"acme.com\",\n  \"careers_url\": \"https://acme.com/careers\",\n  \"ats_platform\": \"greenhouse\",\n  \"ats_slug\": \"acme\",\n  \"founded_year\": 2015,\n  \"employee_count\": \"50-200\",\n  \"tags\": \"saas,b2b\",\n  \"india_friendly\": \"maybe\",\n  \"notes\": \"\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/companies",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "companies"]
+            }
+          }
+        },
+        {
+          "name": "Update company",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Acme Corp\",\n  \"domain\": \"acme.com\",\n  \"careers_url\": \"https://acme.com/careers\",\n  \"ats_platform\": \"greenhouse\",\n  \"ats_slug\": \"acme\",\n  \"founded_year\": 2015,\n  \"employee_count\": \"50-200\",\n  \"tags\": \"saas,b2b\",\n  \"india_friendly\": \"yes\",\n  \"notes\": \"updated\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/companies/{{company_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "companies", "{{company_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Pause company (soft delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/companies/{{company_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "companies", "{{company_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Activate company",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/companies/{{company_id}}/activate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "companies", "{{company_id}}", "activate"]
+            }
+          }
+        },
+        {
+          "name": "Company stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/companies/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "companies", "stats"]
+            }
+          }
+        },
+        {
+          "name": "Seed companies (73 curated)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/companies/seed",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "companies", "seed"]
+            }
+          }
+        },
+        {
+          "name": "Mega-seed companies (250+)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/companies/mega-seed",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "companies", "mega-seed"]
+            }
+          }
+        },
+        {
+          "name": "Crawl one company",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/companies/{{company_id}}/crawl",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "companies", "{{company_id}}", "crawl"]
+            }
+          }
+        },
+        {
+          "name": "Crawl all companies",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/companies/crawl",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "companies", "crawl"]
+            }
+          }
+        },
+        {
+          "name": "Detect ATS for domain",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/companies/detect-ats?domain=stripe.com",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "companies", "detect-ats"],
+              "query": [
+                { "key": "domain", "value": "stripe.com" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Bulk discover companies",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/companies/discover?sources=yc,remoteintech,wwr&detect_ats=true&min_team_size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "companies", "discover"],
+              "query": [
+                { "key": "sources", "value": "yc,remoteintech,wwr", "description": "Comma-separated: yc,remoteintech,wwr" },
+                { "key": "detect_ats", "value": "true", "description": "Slow if true" },
+                { "key": "min_team_size", "value": "10" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Outreach",
+      "item": [
+        {
+          "name": "List outreach",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/outreach?limit=100&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "outreach"],
+              "query": [
+                { "key": "status", "value": "pending", "disabled": true, "description": "pending | messaged | replied | followed_up" },
+                { "key": "search", "value": "", "disabled": true },
+                { "key": "limit", "value": "100" },
+                { "key": "offset", "value": "0" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Outreach stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/outreach/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "outreach", "stats"]
+            }
+          }
+        },
+        {
+          "name": "Generate outreach",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/outreach/generate?min_score=40&limit=15&india_friendly=maybe",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "outreach", "generate"],
+              "query": [
+                { "key": "min_score", "value": "40" },
+                { "key": "limit", "value": "15" },
+                { "key": "india_friendly", "value": "maybe" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update outreach status",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/outreach/{{outreach_id}}/status?status=messaged",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "outreach", "{{outreach_id}}", "status"],
+              "query": [
+                { "key": "status", "value": "messaged", "description": "pending | messaged | replied | followed_up" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update outreach notes",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/outreach/{{outreach_id}}/notes?notes=Reached out on LinkedIn",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "outreach", "{{outreach_id}}", "notes"],
+              "query": [
+                { "key": "notes", "value": "Reached out on LinkedIn" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Search Queries (JSearch)",
+      "item": [
+        {
+          "name": "List queries",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/search-queries",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "search-queries"]
+            }
+          }
+        },
+        {
+          "name": "Add query",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"python backend senior\",\n  \"country\": \"IN\",\n  \"date_posted\": \"3days\",\n  \"remote_jobs_only\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/search-queries",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "search-queries"]
+            }
+          }
+        },
+        {
+          "name": "Update query",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enabled\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/search-queries/{{query_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "search-queries", "{{query_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete query",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/search-queries/{{query_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "search-queries", "{{query_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Google Sheets Export",
+      "item": [
+        {
+          "name": "Export to sheet",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/export/sheets?min_score=40&mode=replace&sheet_name=Jobs",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "export", "sheets"],
+              "query": [
+                { "key": "min_score", "value": "40" },
+                { "key": "india_friendly", "value": "yes", "disabled": true },
+                { "key": "source", "value": "", "disabled": true },
+                { "key": "search", "value": "", "disabled": true },
+                { "key": "tech", "value": "python", "disabled": true },
+                { "key": "mode", "value": "replace", "description": "replace | append" },
+                { "key": "sheet_name", "value": "Jobs" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Sheets status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/export/sheets/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "export", "sheets", "status"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Email Digest",
+      "item": [
+        {
+          "name": "Send now",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/email/send-now?dry_run=false",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "email", "send-now"],
+              "query": [
+                { "key": "dry_run", "value": "false", "description": "If true, returns preview without sending" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Run pipeline",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/email/run-pipeline?send=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "email", "run-pipeline"],
+              "query": [
+                { "key": "send", "value": "true" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Email status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/email/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "email", "status"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "API Monitoring",
+      "item": [
+        {
+          "name": "JSearch status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jsearch/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jsearch", "status"]
+            }
+          }
+        },
+        {
+          "name": "Hunter status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/hunter/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "hunter", "status"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "UI Pages",
+      "item": [
+        {
+          "name": "Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": ["{{baseUrl}}"],
+              "path": [""]
+            }
+          }
+        },
+        {
+          "name": "Outreach page",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/outreach",
+              "host": ["{{baseUrl}}"],
+              "path": ["outreach"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

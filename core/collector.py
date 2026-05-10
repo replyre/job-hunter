@@ -6,9 +6,10 @@ from datetime import datetime
 from core.models import Job
 from core.database import (
     insert_job, init_db, get_companies, update_company_crawl_status,
-    cleanup_old_jobs, get_search_queries,
+    cleanup_old_jobs,
 )
 from core.scorer import score_job
+from core.profile import get_active_profile
 from sources.remotive import RemotiveSource
 from sources.remoteok import RemoteOKSource
 from sources.arbeitnow import ArbeitnowSource
@@ -19,11 +20,8 @@ from sources.ashby import AshbySource
 from sources.html_scraper import HTMLCareerSource
 from config.settings import RAPIDAPI_KEY
 
-# Minimum relevance score for a job to be stored.
-# Jobs below this get dropped — keeps DB focused on relevant ones.
-MIN_SCORE_TO_STORE = 25
-
-# Days before a job not re-seen gets deleted (cleanup)
+# Days before a job not re-seen gets deleted (cleanup). Could be profile-driven
+# in the future, but it's a storage-cost concern, not a user preference.
 STALE_JOB_DAYS = 14
 
 
@@ -39,16 +37,18 @@ def _build_job_board_sources() -> list:
         ArbeitnowSource(),
     ]
     if RAPIDAPI_KEY:
-        # Load queries from DB (user can edit these via UI)
-        db_queries = get_search_queries(enabled_only=True)
+        # Queries come from the active profile (single source of truth).
+        profile = get_active_profile()
+        profile_queries = (profile.get("search") or {}).get("jsearch_default_queries") or []
         queries = [
             {
                 "query": q["query"],
-                "country": q["country"],
-                "date_posted": q["date_posted"],
-                **({"remote_jobs_only": "true"} if q["remote_jobs_only"] else {}),
+                "country": q.get("country", "IN"),
+                "date_posted": q.get("date_posted", "3days"),
+                **({"remote_jobs_only": "true"} if q.get("remote_jobs_only") else {}),
             }
-            for q in db_queries
+            for q in profile_queries
+            if q.get("query") and q.get("enabled", True)
         ]
         if queries:
             sources.append(JSearchSource(queries=queries))
@@ -82,15 +82,18 @@ async def _fetch_from_source(source) -> list[Job]:
         return []
 
 
-def _score_and_store(jobs: list[Job], stats: dict):
+def _score_and_store(jobs: list[Job], stats: dict, profile: dict = None):
     """Score, filter, deduplicate, and store jobs. Shared by both tracks."""
     stats.setdefault("filtered_out", 0)
+    profile = profile or get_active_profile()
+    profile_id = profile.get("_id")
+    min_store = int((profile.get("scoring") or {}).get("min_score_to_store", 25))
 
     for job in jobs:
-        result = score_job(job.title, job.description, job.location)
+        result = score_job(job.title, job.description, job.location, profile=profile)
 
         # Filter: drop irrelevant jobs before storing (saves DB space)
-        if result["score"] < MIN_SCORE_TO_STORE:
+        if result["score"] < min_store:
             stats["filtered_out"] += 1
             continue
 
@@ -109,6 +112,7 @@ def _score_and_store(jobs: list[Job], stats: dict):
         job_dict = job.model_dump()
         job_dict["id"] = job.fingerprint
         job_dict["discovered_at"] = datetime.utcnow().isoformat()
+        job_dict["scored_profile_id"] = profile_id
 
         result_status = insert_job(job_dict)
         if result_status == "new":
@@ -164,7 +168,8 @@ async def run_company_crawl(company_ids: list[str] = None) -> dict:
     stats["fetched"] = len(all_jobs)
 
     log(f"  Total from companies: {len(all_jobs)}")
-    _score_and_store(all_jobs, stats)
+    profile = get_active_profile()
+    _score_and_store(all_jobs, stats, profile=profile)
 
     log(f"  Companies crawled: {stats['companies_crawled']}")
     log(f"  Companies failed: {stats['companies_failed']}")
@@ -186,7 +191,8 @@ async def run_job_boards() -> dict:
         all_jobs.extend(jobs)
 
     stats["fetched"] = len(all_jobs)
-    _score_and_store(all_jobs, stats)
+    profile = get_active_profile()
+    _score_and_store(all_jobs, stats, profile=profile)
     return stats
 
 

@@ -53,17 +53,73 @@ async function collectJobs() {
     btn.disabled = true;
     btn.textContent = 'Collecting...';
 
+    const estimateSec = await estimateCollectionTime();
+    const startMs = Date.now();
+    showCollectLoader(estimateSec);
+    const tick = setInterval(() => updateCollectLoader(startMs, estimateSec), 500);
+
     try {
-        await api('/collect', { method: 'POST' });
-        showToast('Collection complete!');
+        const stats = await api('/collect', { method: 'POST' });
+        const newCount = stats.new ?? 0;
+        const outCount = stats.outreach_generated ?? 0;
+        showToast(`Collection complete — ${newCount} new jobs, ${outCount} outreach items ready to email`);
         await Promise.all([loadJobs(), loadStats(), loadSources(), loadJSearchStatus()]);
     } catch (e) {
         showToast('Collection failed: ' + e.message);
     } finally {
+        clearInterval(tick);
+        hideCollectLoader();
         state.collecting = false;
         btn.disabled = false;
         btn.textContent = 'Collect Jobs';
     }
+}
+
+async function estimateCollectionTime() {
+    // Rough estimate: parallel job boards baseline + JSearch queries (sequential)
+    // + company crawl waves (concurrency 5). Keep conservative.
+    let jsearchCount = 0;
+    let activeCompanies = 0;
+    try {
+        const q = await api('/search-queries');
+        jsearchCount = (q.queries || []).filter(x => x.enabled !== false && x.query).length;
+    } catch {}
+    try {
+        const s = await api('/companies/stats');
+        activeCompanies = (s.by_status && s.by_status.active) || 0;
+    } catch {}
+    const base = 15;                        // parallel boards (remotive/remoteok/arbeitnow)
+    const jsearch = jsearchCount * 4;       // sequential, ~4s/query
+    const companyWaves = Math.ceil(activeCompanies / 5) * 3; // 5-wide concurrency, ~3s/wave
+    return Math.max(10, base + jsearch + companyWaves);
+}
+
+function showCollectLoader(estimateSec) {
+    document.getElementById('collect-estimate').textContent = formatSeconds(estimateSec);
+    document.getElementById('collect-elapsed').textContent = '0s';
+    document.getElementById('collect-loader').hidden = false;
+}
+
+function hideCollectLoader() {
+    document.getElementById('collect-loader').hidden = true;
+}
+
+function updateCollectLoader(startMs, estimateSec) {
+    const elapsed = Math.floor((Date.now() - startMs) / 1000);
+    const el = document.getElementById('collect-elapsed');
+    el.textContent = formatSeconds(elapsed);
+    // When we overshoot the estimate, soften the message
+    if (elapsed > estimateSec) {
+        document.getElementById('collect-estimate').textContent = `${formatSeconds(estimateSec)} (almost there…)`;
+    }
+}
+
+function formatSeconds(total) {
+    total = Math.max(0, Math.round(total));
+    if (total < 60) return `${total}s`;
+    const m = Math.floor(total / 60);
+    const s = total % 60;
+    return s ? `${m}m ${s}s` : `${m}m`;
 }
 
 async function updateStatus(jobId, status) {
@@ -489,12 +545,24 @@ document.addEventListener('keydown', e => {
 });
 
 // ── Init ──
+async function loadActiveProfileIndicator() {
+    const el = document.getElementById('active-profile-indicator');
+    if (!el) return;
+    try {
+        const a = await api('/profiles/active');
+        el.textContent = `Profile: ${a.name || '(none)'}`;
+    } catch (e) {
+        el.textContent = 'Profile: (none)';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     loadStats();
     loadSources();
     loadJobs();
     checkSheetsStatus();
     loadJSearchStatus();
+    loadActiveProfileIndicator();
 
     // Debounced search
     let searchTimeout;

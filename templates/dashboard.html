@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Job Scraper Dashboard</title>
-    <link rel="stylesheet" href="/static/style.css?v=4">
+    <link rel="stylesheet" href="/static/style.css?v=5">
 </head>
 <body>
     <!-- Header -->
@@ -14,9 +14,11 @@
             <nav class="nav-tabs">
                 <a href="/" class="nav-tab active">Jobs</a>
                 <a href="/outreach" class="nav-tab">Outreach</a>
+                <a href="/profile" class="nav-tab">Profile</a>
             </nav>
         </div>
         <div class="header-actions">
+            <span id="active-profile-indicator" style="font-size:12px;color:var(--text-muted);">Profile: …</span>
             <span id="jsearch-status" style="font-size:12px;color:var(--text-muted);">JSearch: loading...</span>
             <button class="btn btn-outline" onclick="openQueriesModal()">Search Queries</button>
             <button id="btn-export" class="btn btn-green" onclick="openExportModal()">Export to Sheets</button>
@@ -84,6 +86,13 @@
         <div class="filter-group" style="justify-content: flex-end;">
             <label>&nbsp;</label>
             <button class="btn btn-outline" onclick="resetFilters()">Reset</button>
+        </div>
+        <div id="collect-loader" class="collect-loader" hidden>
+            <div class="spinner" style="width:16px;height:16px;border-width:2px;"></div>
+            <div class="collect-loader-text">
+                <div class="collect-loader-title">Collecting jobs…</div>
+                <div class="collect-loader-sub"><span id="collect-elapsed">0s</span> / est. <span id="collect-estimate">—</span></div>
+            </div>
         </div>
     </div>
 
@@ -202,6 +211,6 @@
         </div>
     </div>
 
-    <script src="/static/app.js?v=4"></script>
+    <script src="/static/app.js?v=6"></script>
 </body>
 </html>
