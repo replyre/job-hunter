@@ -1,8 +1,8 @@
 # Job Scraper + Daily Outreach System
 
-An automated job discovery and cold outreach system built for backend Python/Django engineers (3+ YOE). Finds fresh jobs daily, scores them for relevance, generates personalized LinkedIn outreach templates, and emails a curated list every morning.
+An automated job discovery and cold outreach system built for software engineers. Finds fresh jobs daily, scores them against a **configurable role profile**, generates personalized LinkedIn outreach templates, and emails a curated list every morning.
 
-**Target user:** Python/Django backend developers applying for jobs in India or remote-friendly roles.
+**Target user:** Any developer running a job search — comes with presets for **Backend Python (3+ YOE)**, **Frontend React**, and **Fresher**. Swap profiles to retarget the entire pipeline (search queries, scoring weights, outreach copy) without editing code.
 
 ---
 
@@ -12,16 +12,73 @@ An automated job discovery and cold outreach system built for backend Python/Dja
 Every day at 9:00 AM IST (automatic):
 
   1. Collects jobs from 4 sources + 150 company career pages
-  2. Filters to relevant Python/Django backend roles (score 25+)
-  3. Deduplicates + cleans up old jobs automatically
+  2. Scores each job against the ACTIVE profile (title/tech/exp/signals)
+  3. Drops anything below the profile's min-score, deduplicates,
+     cleans up jobs not seen in 14 days
   4. For top 15 jobs:
-       - Generates 7 LinkedIn search URLs per company
-         (Eng Manager, Tech Lead, CTO, CEO, HR, etc.)
-       - Writes a personalized DM
-  5. Emails the curated list to the candidate's inbox
+       - Generates LinkedIn people-search URLs per company
+         (titles configured on the profile — Eng Manager, Tech Lead,
+         CTO, CEO, HR, etc.)
+       - Writes a personalized DM using the profile's templates
+  5. Emails the curated list to the recipient configured on the profile
 ```
 
-**Result:** Candidate opens email, gets 15 fresh matching jobs with ready-to-send LinkedIn DMs. Takes ~20 min/day to work through.
+**Result:** Candidate opens email, gets 15 fresh matching jobs with ready-to-send LinkedIn DMs. Takes ~20 min/day to work through. Change roles? Switch profile — no code changes.
+
+---
+
+## Profiles
+
+The pipeline is driven by an **active profile** — a single config blob that controls search queries, scoring, location preferences, and outreach copy. Switching profiles re-targets the system end-to-end without touching code.
+
+### Built-in presets
+
+Stored as YAML in `profiles/`. Import any of them from the Profile page (or via `POST /api/profiles/import`):
+
+| Preset (`profiles/*.yaml`) | Who it's for |
+|---|---|
+| `backend_python.yaml` | Python/Django/FastAPI backend, 3+ YOE (the original target) |
+| `frontend_react.yaml` | React/TypeScript frontend roles |
+| `fresher_any.yaml` | Entry-level / 0-1 YOE across any stack |
+
+### What a profile controls
+
+A profile is one row in the `profiles` table (JSON config), with sections matching the **Profile page tabs**:
+
+- **Search** — default search terms, positive/negative title keywords, relevant tech list, JSearch queries (country, posted-window, remote-only)
+- **Scoring** — experience target (`fresher` / `junior` / `mid` / `senior` / `any`), min-score-to-show, min-score-to-store, weights for title/tech/experience/signals (sum to 100), core tech, domain signals
+- **Location** — India-positive / India-negative keywords, timezone-compatible / incompatible lists
+- **Outreach** — candidate name, bio, achievements, core/extra tech, short + long DM templates, LinkedIn search titles, email greeting, sender + recipient email, digest subject role word
+
+### UI — `/profile` page
+
+- Sidebar lists all saved profiles and shows the currently-active one
+- Import any YAML preset, edit it, then **Save** or **Save & Activate**
+- **Re-score All Jobs** — recomputes every stored job's relevance against the active profile (optionally drops anything that now falls below min-score-to-store)
+- **Export YAML** — download the active profile as YAML (round-trips back into `profiles/`)
+- **Duplicate / Delete** — fork a profile to tweak, or remove an unused one (the active profile can't be deleted — activate another first)
+
+### Per-profile email settings
+
+Email digest fields live on the profile: `sender_email`, `recipient_email`, `email_greeting`, `email_digest_subject_role`. These **override** the corresponding `.env` values, so different profiles can send to different inboxes. The Gmail app password still comes from `SENDER_APP_PASSWORD` in `.env` — it must match whichever sender address the active profile uses.
+
+### Profile API (summary)
+
+| Method + path | Purpose |
+|---|---|
+| `GET /api/profiles` | List all profiles + presets available for import |
+| `GET /api/profiles/active` | Get the currently-active profile's full config |
+| `GET /api/profiles/{id}` | Get one profile by id |
+| `POST /api/profiles` | Create a new profile from a JSON body |
+| `PUT /api/profiles/{id}` | Update name / description / config |
+| `POST /api/profiles/{id}/activate` | Make this profile active (cache invalidated immediately) |
+| `POST /api/profiles/{id}/duplicate` | Fork an existing profile |
+| `DELETE /api/profiles/{id}` | Delete (rejected if active) |
+| `POST /api/profiles/import` | Import a YAML preset by slug; optional `activate` + `overwrite` flags |
+| `GET /api/profiles/{id}/export` | Export profile back to YAML |
+| `POST /api/profiles/rescore-all` | Re-score every stored job against the active profile (`delete_below_min=true` to prune) |
+
+On first run, if no profile exists, the system seeds a `Backend Python (legacy)` profile from the pre-profile hardcoded settings and activates it — so existing installs keep working.
 
 ---
 
@@ -36,6 +93,7 @@ Every day at 9:00 AM IST (automatic):
 | [docs/05-api-reference.md](docs/05-api-reference.md) | All API endpoints |
 | [docs/06-database.md](docs/06-database.md) | Database schema |
 | [docs/07-customization.md](docs/07-customization.md) | How to adapt for other candidates / roles |
+| [docs/job-scraper.postman_collection.json](docs/job-scraper.postman_collection.json) | Postman collection (import + the env file alongside it) for every endpoint, including the profile APIs |
 
 ---
 
@@ -95,9 +153,9 @@ GOOGLE_SHEET_ID=
 | Variable | Required | What happens without it |
 |---|---|---|
 | `RAPIDAPI_KEY` | ⚠️ Strongly recommended | JSearch source won't run; loses ~60 fresh jobs/day |
-| `SENDER_EMAIL` | ✅ Required for email | Daily email won't send |
-| `SENDER_APP_PASSWORD` | ✅ Required for email | Daily email won't send |
-| `RECIPIENT_EMAIL` | ✅ Required for email | Daily email has no destination |
+| `SENDER_EMAIL` | ✅ Required for email | Daily email won't send (the active profile can override this) |
+| `SENDER_APP_PASSWORD` | ✅ Required for email | Daily email won't send — must match whichever sender the profile uses |
+| `RECIPIENT_EMAIL` | ✅ Required for email | Daily email has no destination (the active profile can override this) |
 | `DAILY_EMAIL_HOUR` | Optional (defaults to 9) | Email sends at 9 AM IST |
 | `DAILY_JOBS_COUNT` | Optional (defaults to 15) | 15 jobs per email |
 | `HUNTER_API_KEY` | Optional | Currently unused — LinkedIn search URLs replaced Hunter |
@@ -128,7 +186,8 @@ See [docs/02-setup.md](docs/02-setup.md) for complete setup instructions.
 ## Tech Stack
 
 - **Backend:** Python 3.13, FastAPI, SQLite, APScheduler
-- **Frontend:** Vanilla JS, HTML, CSS (no framework)
+- **Frontend:** Vanilla JS, HTML, CSS (no framework) — three pages: Jobs, Outreach, Profile
+- **Config:** YAML presets in `profiles/` for role configurations; runtime config lives in the `profiles` SQLite table
 - **External APIs:** JSearch (RapidAPI), Greenhouse, Lever, Ashby, Remotive, RemoteOK, Arbeitnow
 - **Email:** Gmail SMTP with App Password
 
